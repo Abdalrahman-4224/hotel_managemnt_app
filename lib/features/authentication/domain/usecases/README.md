@@ -1,0 +1,1 @@
+Authentication use cases belong in this directory.
