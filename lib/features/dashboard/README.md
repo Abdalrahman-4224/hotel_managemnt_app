@@ -1,1 +1,0 @@
-Dashboard feature files belong in this directory.

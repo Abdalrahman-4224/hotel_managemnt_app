@@ -8,11 +8,10 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Hotel Management',
       theme: AppTheme.light,
-      onGenerateRoute: AppRouter.onGenerateRoute,
-      home: AppRouter.home,
+      routerConfig: appRouter,
     );
   }
 }

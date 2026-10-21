@@ -1,1 +1,0 @@
-Authentication feature widgets belong in this directory.
