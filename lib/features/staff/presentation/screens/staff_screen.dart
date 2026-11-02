@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../data/data_sources/staff_local_data_source.dart';
+import '../controllers/staff_controller.dart';
 import '../../domain/entities/staff_member.dart';
 import '../widgets/staff_tables.dart';
 
 /// Staff log: a filterable list, and an activity view per employee.
-class StaffScreen extends StatefulWidget {
+class StaffScreen extends ConsumerStatefulWidget {
   const StaffScreen({super.key});
 
   @override
-  State<StaffScreen> createState() => _StaffScreenState();
+  ConsumerState<StaffScreen> createState() => _StaffScreenState();
 }
 
-class _StaffScreenState extends State<StaffScreen> {
-  final _staff = const StaffLocalDataSource().getStaff();
+class _StaffScreenState extends ConsumerState<StaffScreen> {
+  var _staff = const <StaffMember>[];
   var _onlineOnly = false;
   String? _department;
   StaffMember? _selected;
@@ -28,6 +29,8 @@ class _StaffScreenState extends State<StaffScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final async = ref.watch(staffControllerProvider);
+    _staff = async.value ?? const [];
     final p = _selected;
     return PopScope(
       canPop: p == null,
@@ -42,18 +45,29 @@ class _StaffScreenState extends State<StaffScreen> {
               onBack: () => setState(() => _selected = null),
               subtitle: p != null
                   ? '${p.department} · آخر نشاط ${p.lastSeen}'
-                  : '${_staff.where((s) => s.online).length} يعملون الآن من ${_staff.length}',
+                  : '${_staff.where((s) => s.online).length} نشطون اليوم من ${_staff.length}',
               title: p?.name ?? 'سجل الموظفين',
             ),
             Expanded(
-              child: ListView(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  14,
-                  16,
-                  NzBottomNav.bodyPadding(context),
+              child: NzAsyncBody(
+                hasValue: async.hasValue,
+                error: async.error,
+                onRetry: () =>
+                    ref.read(staffControllerProvider.notifier).refresh(),
+                child: () => RefreshIndicator(
+                  onRefresh: () =>
+                      ref.read(staffControllerProvider.notifier).refresh(),
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      14,
+                      16,
+                      NzBottomNav.bodyPadding(context),
+                    ),
+                    children: p == null ? _list() : [_detail(p)],
+                  ),
                 ),
-                children: p == null ? _list() : [_detail(p)],
               ),
             ),
           ],
@@ -85,7 +99,7 @@ class _StaffScreenState extends State<StaffScreen> {
           const SizedBox(width: 8),
           Expanded(
             child: _Stat(
-              'مهام منجزة',
+              'مهام مفتوحة',
               fmtNum(_staff.fold<int>(0, (n, s) => n + s.tasks)),
             ),
           ),
@@ -104,7 +118,7 @@ class _StaffScreenState extends State<StaffScreen> {
                 NzSegment(false, 'الكل', count: '${inDept.length}'),
                 NzSegment(
                   true,
-                  'نشط الآن',
+                  'نشط اليوم',
                   count: '${inDept.where((s) => s.online).length}',
                 ),
               ],
@@ -172,7 +186,10 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   Widget _detail(StaffMember p) {
-    final acts = p.activity.reversed.toList();
+    // Newest first; empty while loading.
+    final acts =
+        ref.watch(staffActivityProvider(p.id)).value?.reversed.toList() ??
+        const <StaffActivity>[];
     return Column(
           key: ValueKey(p.id),
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -233,7 +250,7 @@ class _StaffScreenState extends State<StaffScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      p.online ? 'يعمل الآن' : 'غير متصل',
+                      p.lastSeen,
                       style: AppText.body(
                         12.5,
                         weight: FontWeight.w600,
@@ -254,7 +271,7 @@ class _StaffScreenState extends State<StaffScreen> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: _Stat('مهام اليوم', fmtNum(p.tasks), big: false),
+                  child: _Stat('مهام مفتوحة', fmtNum(p.tasks), big: false),
                 ),
               ],
             ),
@@ -303,7 +320,8 @@ class _StaffScreenState extends State<StaffScreen> {
   }
 
   void _openDepartments() {
-    final options = <String?>[null, ...StaffLocalDataSource.departments];
+    final departments = {for (final s in _staff) s.department}.toList();
+    final options = <String?>[null, ...departments];
     showNzSheet<void>(
       context,
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),

@@ -1,1 +1,0 @@
-Authentication repository implementations belong in this directory.

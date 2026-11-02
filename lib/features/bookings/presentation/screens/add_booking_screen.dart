@@ -1,34 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../rooms/domain/entities/room.dart';
+import '../../../rooms/presentation/controllers/floors_controller.dart';
+import '../../data/repositories/bookings_repository_impl.dart';
 import '../controllers/add_booking_controller.dart';
 import '../widgets/booking_details_sheet.dart';
 
 /// Step 1: choose the room(s). Step 2 opens as a tall sheet.
-class AddBookingScreen extends StatefulWidget {
+class AddBookingScreen extends ConsumerStatefulWidget {
   const AddBookingScreen({super.key});
 
   @override
-  State<AddBookingScreen> createState() => _AddBookingScreenState();
+  ConsumerState<AddBookingScreen> createState() => _AddBookingScreenState();
 }
 
-class _AddBookingScreenState extends State<AddBookingScreen> {
-  final _c = AddBookingController();
+class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
+  /// Created once the room map has loaded.
+  AddBookingController? _controller;
+  var _holding = false;
 
   @override
   void dispose() {
-    _c.dispose();
+    _controller?.dispose();
     super.dispose();
+  }
+
+  /// Holds the picked rooms, then opens step 2. Lets the rooms go if step 2 is
+  /// closed without confirming.
+  Future<void> _next(AddBookingController c) async {
+    setState(() => _holding = true);
+    try {
+      await c.holdRooms();
+    } catch (error) {
+      if (mounted) {
+        setState(() => _holding = false);
+        showNzToast(context, errorText(error));
+        // Someone else took a room: show the map as it is now.
+        ref.invalidate(floorsControllerProvider);
+      }
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _holding = false);
+    final confirmed = await showBookingDetails(context, c);
+    if (confirmed != true) await c.releaseRooms();
   }
 
   @override
   Widget build(BuildContext context) {
+    final async = ref.watch(floorsControllerProvider);
+    if (!async.hasValue) {
+      return Scaffold(
+        body: Column(
+          children: [
+            const NzPageHeader(showBack: true, title: 'إضافة حجز'),
+            Expanded(
+              child: NzAsyncBody(
+                hasValue: false,
+                error: async.error,
+                onRetry: () => ref.invalidate(floorsControllerProvider),
+                child: () => const SizedBox(),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (async.value!.isEmpty) {
+      return const Scaffold(
+        body: Column(
+          children: [
+            NzPageHeader(showBack: true, title: 'إضافة حجز'),
+            Expanded(
+              child: NzStateMessage(text: 'لا توجد غرف في هذا الفندق بعد.'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final c = _controller ??= AddBookingController(
+      floors: async.value!,
+      repository: ref.read(bookingsRepositoryProvider),
+    );
     final bottom = MediaQuery.paddingOf(context).bottom;
     return ListenableBuilder(
-      listenable: _c,
+      listenable: c,
       builder: (context, _) => Scaffold(
         body: Stack(
           children: [
@@ -40,8 +102,8 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                   title: 'إضافة حجز',
                   bottomGap: 14,
                   bottom: NzSegmented<bool>(
-                    selected: _c.isGroup,
-                    onChanged: _c.setGroup,
+                    selected: c.isGroup,
+                    onChanged: c.setGroup,
                     segments: const [
                       NzSegment(false, 'حجز فرد'),
                       NzSegment(true, 'حجز حملة'),
@@ -54,12 +116,12 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                     children: [
                       NzPillScroller(
                         children: [
-                          for (final (i, f) in _c.floors.indexed)
+                          for (final (i, f) in c.floors.indexed)
                             NzChoicePill(
                               label: f.name,
                               count: '${f.rooms.where((r) => r.isFree).length}',
-                              selected: _c.floor == i,
-                              onTap: () => _c.setFloor(i),
+                              selected: c.floor == i,
+                              onTap: () => c.setFloor(i),
                             ),
                         ],
                       ),
@@ -70,7 +132,7 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Text(
-                              _c.isGroup
+                              c.isGroup
                                   ? 'اختر غرف الحملة من الغرف المتاحة — يمكنك التنقل بين الطوابق.'
                                   : 'اختر غرفة واحدة متاحة.',
                               style: AppText.body(
@@ -82,11 +144,11 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
                             const SizedBox(height: 14),
                             NzGrid(
                               children: [
-                                for (final r in _c.floors[_c.floor].rooms)
+                                for (final r in c.floors[c.floor].rooms)
                                   _PickTile(
                                     room: r,
-                                    selected: _c.selected.contains(r.number),
-                                    onTap: () => _c.toggleRoom(r),
+                                    selected: c.selected.contains(r.number),
+                                    onTap: () => c.toggleRoom(r),
                                   ),
                               ],
                             ),
@@ -103,8 +165,9 @@ class _AddBookingScreenState extends State<AddBookingScreen> {
               right: 12,
               bottom: 24 + bottom,
               child: _SelectionBar(
-                controller: _c,
-                onNext: () => showBookingDetails(context, _c),
+                controller: c,
+                busy: _holding,
+                onNext: () => _next(c),
               ),
             ),
           ],
@@ -173,7 +236,7 @@ class _PickTile extends StatelessWidget {
                 Text(room.number, style: AppText.num(17, color: fg, height: 1)),
                 const SizedBox(height: 6),
                 Text(
-                  free ? room.type : room.status.label,
+                  free ? room.typeName : room.status.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppText.body(
@@ -193,15 +256,20 @@ class _PickTile extends StatelessWidget {
 }
 
 class _SelectionBar extends StatelessWidget {
-  const _SelectionBar({required this.controller, required this.onNext});
+  const _SelectionBar({
+    required this.controller,
+    required this.busy,
+    required this.onNext,
+  });
 
   final AddBookingController controller;
+  final bool busy;
   final VoidCallback onNext;
 
   @override
   Widget build(BuildContext context) {
     final n = controller.selected.length;
-    final enabled = n > 0;
+    final enabled = n > 0 && !busy;
     return Container(
           padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 12, 12),
           decoration: BoxDecoration(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/campaign.dart';
 
@@ -55,7 +56,7 @@ class CampaignCard extends StatelessWidget {
                         children: [
                           const TextSpan(text: '#'),
                           TextSpan(
-                            text: c.id,
+                            text: '${c.id}',
                             style: AppText.num(
                               12.5,
                               weight: FontWeight.w400,
@@ -93,16 +94,18 @@ class CampaignCard extends StatelessWidget {
                 style: AppText.body(12.5, color: AppColors.inkMuted),
               ),
               Text(
-                '${c.paid.short} / ${c.total.short}',
+                '${fmtNum(c.paid)} \$ / ${fmtNum(c.total)} \$',
                 style: AppText.num(12.5, weight: FontWeight.w400),
               ),
             ],
           ),
           const SizedBox(height: 6),
-          NzProgressBar(value: c.paidPercent / 100, height: 6),
+          NzProgressBar(value: (c.paidPercent / 100).clamp(0, 1), height: 6),
           const SizedBox(height: 6),
           Text(
-            c.paidPercent >= 100 ? 'مسدّدة بالكامل' : 'المتبقي ${c.due.short}',
+            c.paidPercent >= 100
+                ? 'مسدّدة بالكامل'
+                : 'المتبقي ${fmtNum(c.due)} \$',
             style: AppText.body(12.5, color: AppColors.goldDeep),
           ),
           const SizedBox(height: 14),

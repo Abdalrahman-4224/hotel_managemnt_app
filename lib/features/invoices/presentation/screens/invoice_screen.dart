@@ -1,17 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
-import '../../data/data_sources/invoices_local_data_source.dart';
+import '../../domain/entities/invoice.dart';
+import '../controllers/invoice_controller.dart';
 import '../widgets/invoice_paper.dart';
 
-/// Printable guest invoice, with share and print actions.
-class InvoiceScreen extends StatelessWidget {
-  const InvoiceScreen({super.key});
+/// Printable guest invoice for one booking, with share and print actions.
+class InvoiceScreen extends ConsumerWidget {
+  const InvoiceScreen({super.key, required this.bookingId});
+
+  /// Null when opened without a booking (e.g. from the home screen).
+  final int? bookingId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final id = bookingId;
+    if (id == null) {
+      return const Scaffold(
+        body: Column(
+          children: [
+            NzPageHeader(showBack: true, title: 'الفاتورة'),
+            Expanded(
+              child: NzStateMessage(
+                text: 'افتح الفاتورة من سجل الحجوزات: اختر حجزاً مغادراً ثم "الفاتورة".',
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    final async = ref.watch(invoiceProvider(id));
+    if (!async.hasValue) {
+      return Scaffold(
+        body: Column(
+          children: [
+            const NzPageHeader(showBack: true, title: 'الفاتورة'),
+            Expanded(
+              child: NzAsyncBody(
+                hasValue: false,
+                error: async.error,
+                onRetry: () => ref.invalidate(invoiceProvider(id)),
+                child: () => const SizedBox(),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return _InvoiceView(invoice: async.value!);
+  }
+}
+
+class _InvoiceView extends StatelessWidget {
+  const _InvoiceView({required this.invoice});
+
+  final Invoice invoice;
 
   @override
   Widget build(BuildContext context) {
-    final invoice = const InvoicesLocalDataSource().getInvoice();
     void share() => showNzToast(context, 'جُهّز رابط الفاتورة للمشاركة.');
 
     return Scaffold(

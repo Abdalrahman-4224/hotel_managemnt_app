@@ -1,39 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../data/data_sources/rooms_local_data_source.dart';
+import '../../../authentication/domain/entities/permissions.dart';
+import '../../../authentication/presentation/controllers/permissions_controller.dart';
+import '../../domain/entities/floors.dart';
 import '../../domain/entities/room.dart';
+import '../controllers/floors_controller.dart';
 import '../widgets/room_widgets.dart';
 
 /// Floor-by-floor room map with status filters.
-class RoomsScreen extends StatefulWidget {
+class RoomsScreen extends ConsumerStatefulWidget {
   const RoomsScreen({super.key});
 
   @override
-  State<RoomsScreen> createState() => _RoomsScreenState();
+  ConsumerState<RoomsScreen> createState() => _RoomsScreenState();
 }
 
-class _RoomsScreenState extends State<RoomsScreen> {
-  final _floors = const RoomsLocalDataSource().getFloors();
-
-  /// Statuses changed in this session (room number → status).
-  final _overrides = <String, RoomStatus>{};
+class _RoomsScreenState extends ConsumerState<RoomsScreen> {
   var _floor = 0;
   RoomStatus? _filter;
 
-  RoomStatus _statusOf(Room r) => _overrides[r.number] ?? r.status;
-
   @override
   Widget build(BuildContext context) {
-    final all = [for (final f in _floors) ...f.rooms];
-    final floor = _floors[_floor];
-    final list = floor.rooms
-        .where((r) => _filter == null || _statusOf(r) == _filter)
-        .toList();
-    final free = all.where((r) => _statusOf(r) == RoomStatus.free).length;
+    final async = ref.watch(floorsControllerProvider);
+    // Keep showing the last floors while reloading.
+    final floors = async.value ?? const <Floor>[];
+    final all = [for (final f in floors) ...f.rooms];
+    final free = all.where((r) => r.status == RoomStatus.free).length;
 
     return Scaffold(
       body: Stack(
@@ -42,7 +40,9 @@ class _RoomsScreenState extends State<RoomsScreen> {
             children: [
               NzPageHeader(
                 showBack: Navigator.of(context).canPop(),
-                subtitle: '$free غرفة متاحة من ${all.length}',
+                subtitle: async.hasValue
+                    ? '$free غرفة متاحة من ${all.length}'
+                    : 'جارٍ التحميل…',
                 title: 'خريطة الغرف',
                 actions: [
                   NzIconButton(
@@ -56,7 +56,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
                   padding: const EdgeInsets.only(bottom: 2),
                   child: NzPillScroller(
                     children: [
-                      for (final (i, f) in _floors.indexed)
+                      for (final (i, f) in floors.indexed)
                         NzChoicePill(
                           label: f.name,
                           count: '${f.rooms.length}',
@@ -67,84 +67,131 @@ class _RoomsScreenState extends State<RoomsScreen> {
                   ),
                 ),
               ),
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.only(
-                    top: 14,
-                    bottom: NzBottomNav.bodyPadding(context) + 72,
-                  ),
-                  children: [
-                    NzPillScroller(
-                      children: [
-                        for (final st in RoomStatus.values)
-                          NzChoicePill(
-                            label: st.label,
-                            leading: RoomStatusDot(st),
-                            count:
-                                '${floor.rooms.where((r) => _statusOf(r) == st).length}',
-                            selected: _filter == st,
-                            onTap: () => setState(
-                              () => _filter = _filter == st ? null : st,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: list.isEmpty
-                          ? NzDashedBox(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 32,
-                                horizontal: 12,
-                              ),
-                              child: Text(
-                                'لا غرف بهذه الحالة في هذا الطابق.',
-                                textAlign: TextAlign.center,
-                                style: AppText.body(
-                                  14,
-                                  color: AppColors.inkMuted,
-                                ),
-                              ),
-                            )
-                          : NzGrid(
-                              children: [
-                                for (final r in list)
-                                  RoomTile(
-                                    room: r,
-                                    status: _statusOf(r),
-                                    onTap: () => _openRoom(r),
-                                  ),
-                              ],
-                            ),
-                    ),
-                  ],
-                ),
-              ),
+              Expanded(child: _body(async, floors)),
             ],
           ),
-          PositionedDirectional(
-            end: 16,
-            bottom: NzBottomNav.fabBottom(context),
-            child: NzFloatingButton(
-              label: 'حجز جديد',
-              onPressed: () => context.push(AppRoutes.addBooking),
+          if (ref.watch(canProvider).can(Permissions.bookingCreate))
+            PositionedDirectional(
+              end: 16,
+              bottom: NzBottomNav.fabBottom(context),
+              child: NzFloatingButton(
+                label: 'حجز جديد',
+                onPressed: () => context.push(AppRoutes.addBooking),
+              ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _body(AsyncValue<List<Floor>> async, List<Floor> floors) {
+    // First load: nothing to show yet.
+    if (!async.hasValue) {
+      if (async.hasError) {
+        return _Message(
+          text: _errorText(async.error),
+          action: NzPrimaryButton(
+            label: 'إعادة المحاولة',
+            height: 48,
+            onPressed: () =>
+                ref.read(floorsControllerProvider.notifier).refresh(),
+          ),
+        );
+      }
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (floors.isEmpty) {
+      return const _Message(text: 'لا توجد طوابق في هذا الفندق بعد.');
+    }
+
+    // Floors can change after a refresh, so keep the index in range.
+    final floor = floors[_floor.clamp(0, floors.length - 1)];
+    final list = floor.rooms
+        .where((r) => _filter == null || r.status == _filter)
+        .toList();
+
+    return RefreshIndicator(
+      onRefresh: () => ref.read(floorsControllerProvider.notifier).refresh(),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(
+          top: 14,
+          bottom: NzBottomNav.bodyPadding(context) + 72,
+        ),
+        children: [
+          NzPillScroller(
+            children: [
+              for (final st in RoomStatus.values)
+                NzChoicePill(
+                  label: st.label,
+                  leading: RoomStatusDot(st),
+                  count: '${floor.rooms.where((r) => r.status == st).length}',
+                  selected: _filter == st,
+                  onTap: () =>
+                      setState(() => _filter = _filter == st ? null : st),
+                ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: list.isEmpty
+                ? NzDashedBox(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 32,
+                      horizontal: 12,
+                    ),
+                    child: Text(
+                      floor.rooms.isEmpty
+                          ? 'لا غرف في هذا الطابق.'
+                          : 'لا غرف بهذه الحالة في هذا الطابق.',
+                      textAlign: TextAlign.center,
+                      style: AppText.body(14, color: AppColors.inkMuted),
+                    ),
+                  )
+                : NzGrid(
+                    children: [
+                      for (final r in list)
+                        RoomTile(
+                          room: r,
+                          status: r.status,
+                          onTap: () => _openRoom(r, floor.name),
+                        ),
+                    ],
+                  ),
           ),
         ],
       ),
     );
   }
 
-  void _openRoom(Room room) {
-    final floorName = _floors.firstWhere((f) => f.rooms.contains(room)).name;
+  String _errorText(Object? error) =>
+      error is AppException ? error.message : 'حدث خطأ ما، حاول مرة أخرى';
+
+  Future<void> _changeStatus(Room room, RoomStatus status) async {
+    try {
+      await ref
+          .read(floorsControllerProvider.notifier)
+          .setRoomStatus(room, status);
+    } catch (error) {
+      if (mounted) showNzToast(context, _errorText(error));
+    }
+  }
+
+  void _openRoom(Room tapped, String floorName) {
+    final canSetStatus = ref.read(canProvider).can(Permissions.roomUpdate);
     showNzSheet<void>(
       context,
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),
       gap: 16,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) {
-          final st = _statusOf(room);
+      // Consumer: rebuild the sheet when the room's status changes.
+      builder: (ctx) => Consumer(
+        builder: (ctx, ref, _) {
+          final floors = ref.watch(floorsControllerProvider).value ?? [];
+          final room = [for (final f in floors) ...f.rooms]
+              .firstWhere((r) => r.id == tapped.id, orElse: () => tapped);
+          final st = room.status;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -163,10 +210,9 @@ class _RoomsScreenState extends State<RoomsScreen> {
               NzGrid(
                 columns: 2,
                 children: [
-                  _Fact('النوع', room.type),
-                  _Fact('الأسرّة', room.beds),
+                  _Fact('النوع', room.typeName),
+                  _Fact('السعة', '${room.capacity} أشخاص'),
                   _Fact('الطابق', floorName),
-                  _Fact('الإطلالة', room.view),
                 ],
               ),
               const SizedBox(height: 16),
@@ -190,6 +236,11 @@ class _RoomsScreenState extends State<RoomsScreen> {
                     ),
                   ),
                 )
+              else if (!canSetStatus)
+                Text(
+                  'لا تملك صلاحية تغيير حالة الغرفة.',
+                  style: AppText.body(13, color: AppColors.inkMuted),
+                )
               else ...[
                 Text(
                   'حالة الغرفة',
@@ -212,10 +263,7 @@ class _RoomsScreenState extends State<RoomsScreen> {
                           radius: 14,
                           fontSize: 14.5,
                           offColor: AppColors.ink,
-                          onTap: () {
-                            setState(() => _overrides[room.number] = o);
-                            setSheet(() {});
-                          },
+                          onTap: () => _changeStatus(room, o),
                         ),
                       ),
                     ],
@@ -237,6 +285,34 @@ class _RoomsScreenState extends State<RoomsScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Centered text (and an optional button) for loading errors / empty data.
+class _Message extends StatelessWidget {
+  const _Message({required this.text, this.action});
+
+  final String text;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              textAlign: TextAlign.center,
+              style: AppText.body(14.5, color: AppColors.inkMuted),
+            ),
+            if (action != null) ...[const SizedBox(height: 16), action!],
+          ],
+        ),
       ),
     );
   }

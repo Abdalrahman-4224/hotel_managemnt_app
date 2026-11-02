@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
@@ -7,6 +8,8 @@ import 'app_colors.dart';
 /// * display – Noto Naskh Arabic (titles)
 /// * body    – IBM Plex Sans Arabic (UI text)
 /// * num     – Lora (numbers, amounts, codes)
+///
+/// Font sizes are scaled with `.sp`, so text fits every screen size.
 class AppText {
   const AppText._();
 
@@ -16,7 +19,7 @@ class AppText {
     Color color = AppColors.ink,
     double height = 1.3,
   }) => GoogleFonts.notoNaskhArabic(
-    fontSize: size,
+    fontSize: size.sp,
     fontWeight: weight,
     color: color,
     height: height,
@@ -29,7 +32,7 @@ class AppText {
     double? height,
     TextDecoration? decoration,
   }) => GoogleFonts.ibmPlexSansArabic(
-    fontSize: size,
+    fontSize: size.sp,
     fontWeight: weight,
     color: color,
     height: height,
@@ -44,7 +47,7 @@ class AppText {
     double? height,
     double? letterSpacing,
   }) => GoogleFonts.lora(
-    fontSize: size,
+    fontSize: size.sp,
     fontWeight: weight,
     color: color,
     height: height,

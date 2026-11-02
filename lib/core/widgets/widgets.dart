@@ -10,6 +10,7 @@ export 'nz_floating_button.dart';
 export 'nz_grid.dart';
 export 'nz_page_header.dart';
 export 'nz_sheet.dart';
+export 'nz_state_message.dart';
 export 'nz_step_button.dart';
 export 'nz_table.dart';
 export 'nz_text_field.dart';

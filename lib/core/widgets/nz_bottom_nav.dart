@@ -23,12 +23,19 @@ class NzBottomNav extends StatelessWidget {
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.items = allItems,
   });
 
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  static const items = [
+  /// The tabs to show. The shell passes a subset when the user's permissions
+  /// don't cover every tab, so [currentIndex] and [onTap] are indexes into
+  /// this list, not into [allItems].
+  final List<NzNavItem> items;
+
+  /// Every tab, in the same order as the router's shell branches.
+  static const allItems = [
     NzNavItem('الرئيسية', LucideIcons.house),
     NzNavItem('حسابي', LucideIcons.userRound),
     NzNavItem('المالية', LucideIcons.wallet),

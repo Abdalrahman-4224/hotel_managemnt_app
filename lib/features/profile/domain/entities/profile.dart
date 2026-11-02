@@ -26,6 +26,7 @@ class PlanUsage {
 
 class Subscription {
   const Subscription({
+    required this.hotelName,
     required this.name,
     required this.status,
     required this.endsOn,
@@ -35,6 +36,7 @@ class Subscription {
     required this.usage,
   });
 
+  final String hotelName;
   final String name;
   final String status;
   final String endsOn;

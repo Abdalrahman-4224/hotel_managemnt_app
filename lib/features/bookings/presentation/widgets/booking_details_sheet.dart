@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/booking_quote.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
+import '../../../rooms/presentation/controllers/floors_controller.dart';
 import '../controllers/add_booking_controller.dart';
+import '../controllers/bookings_controller.dart';
 
 /// Step 2 of adding a booking: guest details, payment and pricing.
-Future<void> showBookingDetails(
+/// Resolves to true when the booking was created.
+Future<bool?> showBookingDetails(
   BuildContext context,
   AddBookingController controller,
 ) {
-  return showModalBottomSheet<void>(
+  return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -31,16 +37,16 @@ Future<void> showBookingDetails(
   );
 }
 
-class _BookingDetails extends StatefulWidget {
+class _BookingDetails extends ConsumerStatefulWidget {
   const _BookingDetails({required this.controller});
 
   final AddBookingController controller;
 
   @override
-  State<_BookingDetails> createState() => _BookingDetailsState();
+  ConsumerState<_BookingDetails> createState() => _BookingDetailsState();
 }
 
-class _BookingDetailsState extends State<_BookingDetails> {
+class _BookingDetailsState extends ConsumerState<_BookingDetails> {
   AddBookingController get c => widget.controller;
   late final _rate = TextEditingController(text: '${c.rate}');
   late final _discount = TextEditingController(text: '${c.discountValue}');
@@ -72,18 +78,36 @@ class _BookingDetailsState extends State<_BookingDetails> {
                   20 + MediaQuery.viewInsetsOf(context).bottom,
                 ),
                 children: [
+                  if (c.isGroup) ...[
+                    NzTextField(
+                      label: 'اسم الحملة / الجهة',
+                      hint: 'شركة الأفق للسفر',
+                      controller: c.groupName,
+                      style: AppText.body(16),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   NzTextField(
-                    label: c.isGroup ? 'اسم الحملة / الجهة' : 'اسم النزيل',
-                    hint: c.isGroup ? 'شركة الأفق للسفر' : 'سعد المطيري',
+                    label: c.isGroup ? 'اسم مسؤول الحملة' : 'اسم النزيل',
+                    hint: 'سعد المطيري',
+                    controller: c.guestName,
                     style: AppText.body(16),
                   ),
                   const SizedBox(height: 16),
                   NzTextField(
-                    label: c.isGroup
-                        ? 'هاتف مسؤول الحملة'
-                        : 'رقم الهوية / الجواز أو الهاتف',
+                    label: 'رقم الهوية / الجواز',
+                    hint: 'A1234567',
+                    controller: c.nationalId,
+                    textDirection: TextDirection.ltr,
+                    textAlign: TextAlign.right,
+                    style: AppText.num(16, weight: FontWeight.w500),
+                  ),
+                  const SizedBox(height: 16),
+                  NzTextField(
+                    label: c.isGroup ? 'هاتف مسؤول الحملة' : 'رقم الهاتف',
                     hint: '07700000000',
-                    keyboardType: TextInputType.number,
+                    controller: c.phone,
+                    keyboardType: TextInputType.phone,
                     textDirection: TextDirection.ltr,
                     textAlign: TextAlign.right,
                     style: AppText.num(16, weight: FontWeight.w500),
@@ -167,6 +191,29 @@ class _BookingDetailsState extends State<_BookingDetails> {
         );
       },
     );
+  }
+
+  Future<void> _confirm() async {
+    final problem = c.validate();
+    if (problem != null) {
+      showNzToast(context, problem);
+      return;
+    }
+    final router = GoRouter.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      await c.confirm();
+    } catch (error) {
+      if (mounted) showNzToast(context, errorText(error));
+      return;
+    }
+    // The new booking changes the lists and the room map.
+    ref.invalidate(bookingsControllerProvider);
+    ref.invalidate(floorsControllerProvider);
+    ref.invalidate(dashboardProvider);
+    if (mounted) showNzToast(context, 'تم تأكيد الحجز');
+    navigator.pop(true);
+    router.go(AppRoutes.home);
   }
 
   Widget _header() {
@@ -553,15 +600,11 @@ class _BookingDetailsState extends State<_BookingDetails> {
           Expanded(
             flex: 2,
             child: NzPrimaryButton(
-              label: 'تأكيد الحجز',
+              label: c.isSaving ? 'جارٍ الحفظ...' : 'تأكيد الحجز',
               icon: LucideIcons.check,
               weight: FontWeight.w500,
-              onPressed: () {
-                final router = GoRouter.of(context);
-                showNzToast(context, 'تم تأكيد الحجز');
-                Navigator.of(context).pop();
-                router.go(AppRoutes.home);
-              },
+              disabled: c.isSaving,
+              onPressed: _confirm,
             ),
           ),
         ],

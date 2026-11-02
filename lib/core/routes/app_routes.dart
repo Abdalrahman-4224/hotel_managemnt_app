@@ -3,6 +3,7 @@ class AppRoutes {
   const AppRoutes._();
 
   static const login = '/login';
+  static const activate = '/activate';
 
   // Bottom-nav tabs.
   static const home = '/home';

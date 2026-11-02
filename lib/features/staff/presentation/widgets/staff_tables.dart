@@ -97,7 +97,7 @@ class _StaffRow extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${m.role} · ${m.online ? m.lastSeen : 'غير متصل'}',
+                              '${m.role} · ${m.lastSeen}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppText.body(

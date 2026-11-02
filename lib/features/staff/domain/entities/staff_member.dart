@@ -19,29 +19,34 @@ class StaffMember {
     required this.id,
     required this.name,
     required this.initial,
+    required this.departmentId,
     required this.department,
     required this.role,
-    required this.online,
-    required this.lastSeen,
     required this.bookings,
     required this.tasks,
     required this.usd,
     required this.iqd,
-    required this.activity,
   });
 
-  final String id;
+  final int id;
   final String name;
   final String initial;
+  final int? departmentId;
   final String department;
   final String role;
-  final bool online;
-  final String lastSeen;
+
+  /// Bookings created today.
   final int bookings;
+
+  /// Tasks assigned and not finished.
   final int tasks;
+
+  /// Money recorded today, per currency.
   final int usd;
   final int iqd;
 
-  /// Today's actions, oldest first.
-  final List<StaffActivity> activity;
+  /// The server has no live presence, so "online" means "did some work today".
+  bool get online => bookings > 0 || usd > 0 || iqd > 0;
+
+  String get lastSeen => online ? 'نشط اليوم' : 'لا نشاط اليوم';
 }

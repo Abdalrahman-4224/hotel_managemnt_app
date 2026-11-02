@@ -19,8 +19,6 @@ class DailyMovement {
 
 class DashboardSummary {
   const DashboardSummary({
-    required this.hotelLine,
-    required this.greeting,
     required this.revenueUsd,
     required this.revenueIqd,
     required this.revenueNote,
@@ -32,8 +30,6 @@ class DashboardSummary {
     required this.movements,
   });
 
-  final String hotelLine;
-  final String greeting;
   final String revenueUsd;
   final String revenueIqd;
   final String revenueNote;

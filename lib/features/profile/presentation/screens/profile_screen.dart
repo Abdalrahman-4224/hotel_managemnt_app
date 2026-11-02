@@ -1,29 +1,47 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../authentication/domain/entities/auth_user.dart';
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../data/data_sources/profile_local_data_source.dart';
 import '../../domain/entities/profile.dart';
+import '../controllers/subscription_controller.dart';
 import '../widgets/settings_row.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _source = const ProfileLocalDataSource();
   var _notifications = true;
   var _biometric = false;
 
+  /// The signed-in user as the profile card shows them.
+  UserProfile _profile(AuthUser? u) {
+    final name = u?.fullName ?? '';
+    final phone = u?.phone ?? '';
+    return UserProfile(
+      initial: name.isEmpty ? '؟' : name.substring(0, 1),
+      name: name,
+      role: u?.roleName ?? '',
+      phone: phone,
+      // Keep the last 4 digits only.
+      maskedPhone: phone.length > 4
+          ? '••• ${phone.substring(phone.length - 4)}'
+          : phone,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = _source.getProfile();
-    final plan = _source.getSubscription();
+    final user = _profile(ref.watch(authControllerProvider).user);
+    final plan = ref.watch(subscriptionProvider);
     return Scaffold(
       body: Column(
         children: [
@@ -51,21 +69,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 _UserCard(user: user),
                 const SizedBox(height: 18),
-                _SubscriptionCard(
-                  plan: plan,
-                  onRenew: () => _openRenew(context),
-                ),
+                if (plan.hasValue)
+                  _SubscriptionCard(
+                    plan: plan.value!,
+                    onRenew: () => _openRenew(context),
+                  )
+                else if (plan.hasError)
+                  NzStateMessage.error(
+                    plan.error,
+                    onRetry: () => ref.invalidate(subscriptionProvider),
+                  )
+                else
+                  const Center(child: CircularProgressIndicator()),
                 const SizedBox(height: 18),
                 const NzGroupLabel('الفندق'),
                 const SizedBox(height: 8),
-                const NzListCard(
+                NzListCard(
                   children: [
                     SettingsRow(
                       icon: LucideIcons.building,
-                      title: 'فندق أ',
-                      subtitle: 'بغداد · الكرادة · 84 غرفة',
+                      title: plan.value?.hotelName ?? '—',
+                      subtitle: '${plan.value?.usage.first.used ?? 0} غرفة',
                     ),
-                    SettingsRow(
+                    const SettingsRow(
                       icon: LucideIcons.receipt,
                       title: 'بيانات الفوترة والضريبة',
                     ),
@@ -154,7 +180,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   foreground: AppColors.danger,
                   borderColor: AppColors.dangerBorder,
                   weight: FontWeight.w600,
-                  onPressed: () => context.go(AppRoutes.login),
+                  // The router sends the user to login after sign out.
+                  onPressed: () =>
+                      ref.read(authControllerProvider.notifier).signOut(),
                 ),
                 const SizedBox(height: 18),
                 Text.rich(

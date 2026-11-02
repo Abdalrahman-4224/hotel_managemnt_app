@@ -1,25 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../data/data_sources/dashboard_local_data_source.dart';
+import '../../../authentication/domain/entities/permissions.dart';
+import '../../../authentication/presentation/controllers/auth_controller.dart';
+import '../../../authentication/presentation/controllers/permissions_controller.dart';
+import '../../../profile/presentation/controllers/subscription_controller.dart';
 import '../../domain/entities/dashboard_summary.dart';
+import '../controllers/dashboard_controller.dart';
 import '../widgets/section_tile.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
+  String _greeting(String? fullName) {
+    final hello = DateTime.now().hour < 12 ? 'صباح الخير' : 'مساء الخير';
+    final first = (fullName ?? '').split(' ').first;
+    return first.isEmpty ? hello : '$hello، $first';
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final data = const DashboardLocalDataSource().getSummary();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final can = ref.watch(canProvider);
+    final user = ref.watch(authControllerProvider).user;
+    final hotel = ref.watch(subscriptionProvider).value?.hotelName ?? '';
+    // Without DASHBOARD_VIEW the summary endpoint returns 403, so don't ask
+    // for it at all - just show the sections this user can open.
+    final showSummary = can.can(Permissions.dashboardView);
+    final async = showSummary
+        ? ref.watch(dashboardProvider)
+        : const AsyncValue<DashboardSummary?>.data(null);
     return Scaffold(
       body: Column(
         children: [
           NzPageHeader(
-            subtitle: data.hotelLine,
-            title: data.greeting,
+            subtitle: hotel,
+            title: _greeting(user?.fullName),
             leading: const NzBrandMark(),
             actions: [
               NzIconButton(
@@ -31,36 +50,68 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
           Expanded(
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                NzBottomNav.bodyPadding(context),
+            child: NzAsyncBody(
+              hasValue: async.hasValue,
+              error: async.error,
+              onRetry: () => ref.invalidate(dashboardProvider),
+              child: () => RefreshIndicator(
+                onRefresh: () async {
+                  if (!showSummary) return;
+                  ref.invalidate(dashboardProvider);
+                  await ref.read(dashboardProvider.future);
+                },
+                child: _body(context, async.value, can),
               ),
-              children: [
-                _RevenueCard(data: data),
-                const SizedBox(height: 18),
-                _StatsRow(data: data),
-                const SizedBox(height: 18),
-                const NzSectionTitle('الأقسام'),
-                const SizedBox(height: 10),
-                const _SectionsGrid(),
-                const SizedBox(height: 18),
-                NzSectionTitle(
-                  'حركة اليوم',
-                  actionLabel: 'عرض الكل',
-                  onAction: () => context.go(AppRoutes.bookings),
-                ),
-                const SizedBox(height: 10),
-                NzListCard(
-                  children: [for (final m in data.movements) _MovementRow(m)],
-                ),
-              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  /// [data] is null when the user may not see the summary.
+  Widget _body(BuildContext context, DashboardSummary? data, Permissions can) {
+    final showMovements = data != null && can.can(Permissions.bookingView);
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        NzBottomNav.bodyPadding(context),
+      ),
+      children: [
+        if (data != null) ...[
+          _RevenueCard(data: data),
+          const SizedBox(height: 18),
+          _StatsRow(data: data),
+          const SizedBox(height: 18),
+        ],
+        const NzSectionTitle('الأقسام'),
+        const SizedBox(height: 10),
+        _SectionsGrid(can: can),
+        if (showMovements) ...[
+          const SizedBox(height: 18),
+          NzSectionTitle(
+            'حركة اليوم',
+            actionLabel: 'عرض الكل',
+            onAction: () => context.go(AppRoutes.bookings),
+          ),
+          const SizedBox(height: 10),
+          if (data.movements.isEmpty)
+            NzDashedBox(
+              child: Text(
+                'لا وصول ولا مغادرة اليوم.',
+                textAlign: TextAlign.center,
+                style: AppText.body(14, color: AppColors.inkMuted),
+              ),
+            )
+          else
+            NzListCard(
+              children: [for (final m in data.movements) _MovementRow(m)],
+            ),
+        ],
+      ],
     );
   }
 }
@@ -221,61 +272,76 @@ class _StatCard extends StatelessWidget {
 }
 
 class _SectionsGrid extends StatelessWidget {
-  const _SectionsGrid();
+  const _SectionsGrid({required this.can});
+
+  final Permissions can;
 
   @override
   Widget build(BuildContext context) {
+    // Each tile needs its permission; the rest are left out of the grid.
     final tiles = [
-      SectionTile(
-        featured: true,
-        icon: LucideIcons.calendarPlus,
-        title: 'إضافة حجز',
-        subtitle: 'حجز فردي أو حملة',
-        onTap: () => context.push(AppRoutes.addBooking),
-      ),
-      SectionTile(
-        icon: LucideIcons.grid2x2,
-        title: 'خريطة الغرف',
-        subtitle: '23 متاحة من 84',
-        onTap: () => context.go(AppRoutes.rooms),
-      ),
-      SectionTile(
-        icon: LucideIcons.calendarCheck,
-        title: 'سجل الحجوزات',
-        subtitle: '14 حجزاً اليوم',
-        onTap: () => context.go(AppRoutes.bookings),
-      ),
-      SectionTile(
-        icon: LucideIcons.users,
-        title: 'الحملات',
-        subtitle: '3 حملات نشطة',
-        onTap: () => context.go(AppRoutes.campaigns),
-      ),
-      SectionTile(
-        icon: LucideIcons.listChecks,
-        title: 'المهام',
-        subtitle: '4 معلّقة · 1 متأخرة',
-        onTap: () => context.go(AppRoutes.tasks),
-      ),
-      SectionTile(
-        icon: LucideIcons.package,
-        title: 'المخزن',
-        subtitle: '5 أصناف تحت الحد',
-        onTap: () => context.go(AppRoutes.inventory),
-      ),
-      SectionTile(
-        icon: LucideIcons.wallet,
-        title: 'الحركات المالية',
-        subtitle: 'آخر حركة قبل ساعة',
-        onTap: () => context.go(AppRoutes.finance),
-      ),
-      SectionTile(
-        icon: LucideIcons.receipt,
-        title: 'الفواتير',
-        subtitle: '2 بانتظار التسوية',
-        onTap: () => context.push(AppRoutes.invoice),
-      ),
+      if (can.can(Permissions.bookingCreate))
+        SectionTile(
+          featured: true,
+          icon: LucideIcons.calendarPlus,
+          title: 'إضافة حجز',
+          subtitle: 'حجز فردي أو حملة',
+          onTap: () => context.push(AppRoutes.addBooking),
+        ),
+      if (can.can(Permissions.roomView))
+        SectionTile(
+          icon: LucideIcons.grid2x2,
+          title: 'خريطة الغرف',
+          subtitle: 'حالة الغرف طابقاً بطابق',
+          onTap: () => context.go(AppRoutes.rooms),
+        ),
+      if (can.can(Permissions.bookingView))
+        SectionTile(
+          icon: LucideIcons.calendarCheck,
+          title: 'سجل الحجوزات',
+          subtitle: 'الدخول والخروج والإلغاء',
+          onTap: () => context.go(AppRoutes.bookings),
+        ),
+      if (can.can(Permissions.campaignView))
+        SectionTile(
+          icon: LucideIcons.users,
+          title: 'الحملات',
+          subtitle: 'الحجوزات الجماعية',
+          onTap: () => context.go(AppRoutes.campaigns),
+        ),
+      if (can.can(Permissions.taskView))
+        SectionTile(
+          icon: LucideIcons.listChecks,
+          title: 'المهام',
+          subtitle: 'الصيانة والتنظيف',
+          onTap: () => context.go(AppRoutes.tasks),
+        ),
+      if (can.can(Permissions.inventoryView))
+        SectionTile(
+          icon: LucideIcons.package,
+          title: 'المخزن',
+          subtitle: 'المواد والكميات',
+          onTap: () => context.go(AppRoutes.inventory),
+        ),
+      if (can.can(Permissions.financeView))
+        SectionTile(
+          icon: LucideIcons.wallet,
+          title: 'الحركات المالية',
+          subtitle: 'القبض والصرف',
+          onTap: () => context.go(AppRoutes.finance),
+        ),
     ];
+
+    if (tiles.isEmpty) {
+      return NzDashedBox(
+        child: Text(
+          'لا توجد أقسام متاحة لحسابك. راجع مدير الفندق.',
+          textAlign: TextAlign.center,
+          style: AppText.body(14, color: AppColors.inkMuted),
+        ),
+      );
+    }
+
     return Column(
       children: [
         for (var i = 0; i < tiles.length; i += 2) ...[
@@ -286,7 +352,11 @@ class _SectionsGrid extends StatelessWidget {
               children: [
                 Expanded(child: tiles[i]),
                 const SizedBox(width: 10),
-                Expanded(child: tiles[i + 1]),
+                // An odd number of tiles leaves the last row half empty.
+                if (i + 1 < tiles.length)
+                  Expanded(child: tiles[i + 1])
+                else
+                  const Spacer(),
               ],
             ),
           ),

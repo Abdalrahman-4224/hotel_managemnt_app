@@ -1,3 +1,5 @@
+import '../../../../core/utils/formatters.dart';
+
 enum StockLevel { good, low, out }
 
 extension StockLevelLabel on StockLevel {
@@ -10,27 +12,32 @@ extension StockLevelLabel on StockLevel {
 
 /// A stock category with the product types the manager allows in it.
 class InventoryCategory {
-  const InventoryCategory(this.id, this.name, this.types);
+  const InventoryCategory(this.name, this.types);
 
-  final String id;
   final String name;
   final List<String> types;
 }
 
 class InventoryItem {
   const InventoryItem({
+    required this.id,
     required this.name,
-    required this.categoryId,
+    required this.category,
     required this.quantity,
     required this.minimum,
-    required this.unitPrice,
+    required this.price,
   });
 
+  final int id;
   final String name;
-  final String categoryId;
+
+  /// Category name, e.g. "تنظيف".
+  final String category;
   final int quantity;
   final int minimum;
-  final String unitPrice;
+  final double price;
+
+  String get unitPrice => price > 0 ? fmtNum(price) : '—';
 
   bool get isLow => quantity < minimum;
 
@@ -42,12 +49,19 @@ class InventoryItem {
 
   /// Fill of the stock bar: full at twice the minimum.
   double get fill => (quantity / (minimum * 2).clamp(1, 1 << 30)).clamp(0, 1);
+}
 
-  InventoryItem receive(int amount) => InventoryItem(
-    name: name,
-    categoryId: categoryId,
-    quantity: quantity + amount,
-    minimum: minimum,
-    unitPrice: unitPrice,
-  );
+/// What the new-item form collects.
+class NewInventoryItem {
+  const NewInventoryItem({
+    required this.name,
+    required this.category,
+    required this.quantity,
+    required this.minimum,
+  });
+
+  final String name;
+  final String category;
+  final int quantity;
+  final int minimum;
 }

@@ -1,3 +1,5 @@
+import '../../../../core/utils/formatters.dart';
+
 enum TxKind { income, expense }
 
 enum TxMethod { cash, card }
@@ -20,40 +22,62 @@ extension TxKindLabel on TxKind {
 /// exactly one currency.
 class FinanceTransaction {
   const FinanceTransaction({
-    required this.date,
+    required this.id,
+    required this.when,
     required this.kind,
     required this.reference,
     required this.method,
     required this.staff,
-    required this.amount,
+    required this.value,
     required this.currency,
+    this.bookingId,
   });
 
-  /// `d/m` within the current year, or `اليوم` for today.
-  final String date;
+  final int id;
+  final DateTime when;
   final TxKind kind;
   final String reference;
   final TxMethod method;
   final String staff;
-  final String amount;
+  final double value;
   final TxCurrency currency;
+  final int? bookingId;
 
   bool get isIncome => kind == TxKind.income;
 
+  String get amount => fmtNum(value.abs());
+
   String get signedAmount => '${isIncome ? '+' : '−'}$amount';
 
-  String get fullDate => date == 'اليوم' ? date : '$date/2026';
+  bool get isToday {
+    final now = DateTime.now();
+    return when.year == now.year &&
+        when.month == now.month &&
+        when.day == now.day;
+  }
 
-  /// The correcting entry: same amount, opposite direction.
-  FinanceTransaction reversed() => FinanceTransaction(
-    date: 'اليوم',
-    kind: isIncome ? TxKind.expense : TxKind.income,
-    reference: 'عكس: $reference',
-    method: method,
-    staff: 'أنت',
-    amount: amount,
-    currency: currency,
-  );
+  /// `اليوم` for today, otherwise `d/m/yyyy`.
+  String get fullDate =>
+      isToday ? 'اليوم' : '${when.day}/${when.month}/${when.year}';
+}
+
+/// What the new-transaction form collects (also used for a reversing entry).
+class NewTransaction {
+  const NewTransaction({
+    required this.kind,
+    required this.reference,
+    required this.method,
+    required this.amount,
+    required this.currency,
+    this.bookingId,
+  });
+
+  final TxKind kind;
+  final String reference;
+  final TxMethod method;
+  final double amount;
+  final TxCurrency currency;
+  final int? bookingId;
 }
 
 class FinanceTotals {

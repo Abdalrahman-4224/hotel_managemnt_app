@@ -1,3 +1,5 @@
+/// Room status, matching the server's `current_status`:
+/// Available → free, Booked → held, Occupied → busy, anything else → maintenance.
 enum RoomStatus { free, busy, held, maintenance }
 
 extension RoomStatusLabel on RoomStatus {
@@ -10,29 +12,37 @@ extension RoomStatusLabel on RoomStatus {
 }
 
 class Room {
-  const Room(this.number, this.status, this.type, this.beds, this.view);
-
+  final int id;
   final String number;
+  final int floorId;
+  final int roomTypeId;
   final RoomStatus status;
-  final String type;
-  final String beds;
-  final String view;
+
+  // These two come from the room type (GET /room-types).
+  final String typeName;
+  final int capacity;
+
+  const Room({
+    required this.id,
+    required this.number,
+    required this.floorId,
+    required this.roomTypeId,
+    required this.status,
+    required this.typeName,
+    required this.capacity,
+  });
 
   bool get isFree => status == RoomStatus.free;
 
-  /// How many guests the room sleeps.
-  int get capacity => switch (type) {
-    'مفردة' => 1,
-    'مزدوجة' => 2,
-    'ثلاثية' => 3,
-    'جناح' => 4,
-    _ => 1,
-  };
-}
-
-class Floor {
-  const Floor(this.name, this.rooms);
-
-  final String name;
-  final List<Room> rooms;
+  Room copyWith({RoomStatus? status}) {
+    return Room(
+      id: id,
+      number: number,
+      floorId: floorId,
+      roomTypeId: roomTypeId,
+      status: status ?? this.status,
+      typeName: typeName,
+      capacity: capacity,
+    );
+  }
 }

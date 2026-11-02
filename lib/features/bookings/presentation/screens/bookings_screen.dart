@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../../data/data_sources/bookings_local_data_source.dart';
+import '../../../authentication/domain/entities/permissions.dart';
+import '../../../authentication/presentation/controllers/permissions_controller.dart';
 import '../../domain/entities/booking.dart';
+import '../controllers/bookings_controller.dart';
 
 enum _Tab { today, upcoming, staying, departed, cancelled }
 
@@ -22,24 +27,22 @@ extension on _Tab {
     _Tab.today => 'حجوزات تاريخها اليوم: دخول وخروج وإلغاء.',
     _Tab.upcoming => 'حجوزات مؤكدة لم يُسجَّل دخولها بعد.',
     _Tab.staying => 'نزلاء داخل الفندق الآن.',
-    _Tab.departed => 'سجّلوا خروجهم — كل خروج ينشئ مهمة تنظيف تلقائياً.',
+    _Tab.departed => 'سجّلوا خروجهم وأصبحت غرفهم متاحة.',
     _Tab.cancelled => 'الحجوزات الملغاة تبقى في السجل للمراجعة.',
   };
 }
 
-class BookingsScreen extends StatefulWidget {
+class BookingsScreen extends ConsumerStatefulWidget {
   const BookingsScreen({super.key});
 
   @override
-  State<BookingsScreen> createState() => _BookingsScreenState();
+  ConsumerState<BookingsScreen> createState() => _BookingsScreenState();
 }
 
-class _BookingsScreenState extends State<BookingsScreen> {
-  final _bookings = const BookingsLocalDataSource().getBookings();
-  final _statusOverrides = <String, BookingStatus>{};
+class _BookingsScreenState extends ConsumerState<BookingsScreen> {
   var _tab = _Tab.today;
 
-  BookingStatus _st(Booking b) => _statusOverrides[b.id] ?? b.status;
+  BookingStatus _st(Booking b) => b.status;
 
   bool _matches(Booking b, _Tab t) => switch (t) {
     _Tab.today => b.isToday,
@@ -51,11 +54,15 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = _bookings.where((b) => _matches(b, _tab)).toList();
-    final staying = _bookings
+    final async = ref.watch(bookingsControllerProvider);
+    final can = ref.watch(canProvider);
+    final canCreate = can.can(Permissions.bookingCreate);
+    final bookings = async.value ?? const <Booking>[];
+    final rows = bookings.where((b) => _matches(b, _tab)).toList();
+    final staying = bookings
         .where((b) => _st(b) == BookingStatus.staying)
         .length;
-    final upcoming = _bookings.where((b) => _st(b).isUpcoming).length;
+    final upcoming = bookings.where((b) => _st(b).isUpcoming).length;
 
     return Scaffold(
       body: Stack(
@@ -64,17 +71,20 @@ class _BookingsScreenState extends State<BookingsScreen> {
             children: [
               NzPageHeader(
                 showBack: Navigator.of(context).canPop(),
-                subtitle: '$staying مقيمون الآن · $upcoming قادمون',
+                subtitle: async.hasValue
+                    ? '$staying مقيمون الآن · $upcoming قادمون'
+                    : 'جارٍ التحميل…',
                 title: 'سجل الحجوزات',
                 actions: [
-                  NzOutlineButton(
-                    label: 'الحملات',
-                    icon: LucideIcons.users,
-                    height: 44,
-                    radius: 14,
-                    fontSize: 14,
-                    onPressed: () => context.push(AppRoutes.campaigns),
-                  ),
+                  if (can.can(Permissions.campaignView))
+                    NzOutlineButton(
+                      label: 'الحملات',
+                      icon: LucideIcons.users,
+                      height: 44,
+                      radius: 14,
+                      fontSize: 14,
+                      onPressed: () => context.push(AppRoutes.campaigns),
+                    ),
                   NzIconButton(
                     icon: LucideIcons.search,
                     tooltip: 'بحث',
@@ -90,7 +100,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         NzChoicePill(
                           label: t.label,
                           count:
-                              '${_bookings.where((b) => _matches(b, t)).length}',
+                              '${bookings.where((b) => _matches(b, t)).length}',
                           selected: _tab == t,
                           onTap: () => setState(() => _tab = t),
                         ),
@@ -99,86 +109,151 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 ),
               ),
               Expanded(
-                child: ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    14,
-                    16,
-                    NzBottomNav.bodyPadding(context) + 76,
-                  ),
-                  children: [
-                    Text(
-                      _tab.note,
-                      style: AppText.body(
-                        13,
-                        color: AppColors.inkMuted,
-                        height: 1.6,
+                child: NzAsyncBody(
+                  hasValue: async.hasValue,
+                  error: async.error,
+                  onRetry: () =>
+                      ref.read(bookingsControllerProvider.notifier).refresh(),
+                  child: () => RefreshIndicator(
+                    onRefresh: () =>
+                        ref.read(bookingsControllerProvider.notifier).refresh(),
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        16,
+                        14,
+                        16,
+                        NzBottomNav.bodyPadding(context) + 76,
                       ),
-                    ),
-                    const SizedBox(height: 14),
-                    if (rows.isEmpty)
-                      NzDashedBox(
-                        child: Text(
-                          'لا حجوزات في هذا التصنيف.',
-                          textAlign: TextAlign.center,
-                          style: AppText.body(14, color: AppColors.inkMuted),
+                      children: [
+                        Text(
+                          _tab.note,
+                          style: AppText.body(
+                            13,
+                            color: AppColors.inkMuted,
+                            height: 1.6,
+                          ),
                         ),
-                      )
-                    else ...[
-                      NzCard(
-                        radius: 18,
-                        shadow: AppShadows.card,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const NzTableHead(
-                              cells: [
-                                ('رقم', null, 48, TextAlign.start),
-                                ('النزيل · الغرفة', 1, null, TextAlign.start),
-                                ('الحالة', null, 66, TextAlign.start),
-                                ('المبلغ', null, 80, TextAlign.end),
+                        const SizedBox(height: 14),
+                        if (rows.isEmpty)
+                          NzDashedBox(
+                            child: Text(
+                              'لا حجوزات في هذا التصنيف.',
+                              textAlign: TextAlign.center,
+                              style: AppText.body(
+                                14,
+                                color: AppColors.inkMuted,
+                              ),
+                            ),
+                          )
+                        else ...[
+                          NzCard(
+                            radius: 18,
+                            shadow: AppShadows.card,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                const NzTableHead(
+                                  cells: [
+                                    ('رقم', null, 48, TextAlign.start),
+                                    (
+                                      'النزيل · الغرفة',
+                                      1,
+                                      null,
+                                      TextAlign.start,
+                                    ),
+                                    ('الحالة', null, 66, TextAlign.start),
+                                    ('المبلغ', null, 80, TextAlign.end),
+                                  ],
+                                ),
+                                for (var i = 0; i < rows.length; i++) ...[
+                                  if (i > 0) const NzDivider(),
+                                  _BookingRow(
+                                    booking: rows[i],
+                                    status: _st(rows[i]),
+                                    highlight:
+                                        _tab != _Tab.today && rows[i].isToday,
+                                    onTap: () => _open(rows[i]),
+                                  ),
+                                ],
                               ],
                             ),
-                            for (var i = 0; i < rows.length; i++) ...[
-                              if (i > 0) const NzDivider(),
-                              _BookingRow(
-                                booking: rows[i],
-                                status: _st(rows[i]),
-                                highlight:
-                                    _tab != _Tab.today && rows[i].isToday,
-                                onTap: () => _open(rows[i]),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'اضغط على اسم النزيل لعرض الحجز وإجراءاته.',
-                        textAlign: TextAlign.center,
-                        style: AppText.body(12.5, color: AppColors.inkFaint),
-                      ),
-                    ],
-                  ],
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'اضغط على اسم النزيل لعرض الحجز وإجراءاته.',
+                            textAlign: TextAlign.center,
+                            style: AppText.body(
+                              12.5,
+                              color: AppColors.inkFaint,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          PositionedDirectional(
-            end: 16,
-            bottom: NzBottomNav.fabBottom(context),
-            child: NzFloatingButton(
-              label: 'حجز جديد',
-              onPressed: () => context.push(AppRoutes.addBooking),
+          if (canCreate)
+            PositionedDirectional(
+              end: 16,
+              bottom: NzBottomNav.fabBottom(context),
+              child: NzFloatingButton(
+                label: 'حجز جديد',
+                onPressed: () => context.push(AppRoutes.addBooking),
+              ),
             ),
-          ),
         ],
       ),
     );
   }
 
+  /// Whether the user may run the main action for a booking in this state.
+  bool _canDoMainAction(Permissions can, BookingStatus status) =>
+      switch (status) {
+        BookingStatus.confirmed ||
+        BookingStatus.upcoming ||
+        BookingStatus.staying => can.can(Permissions.bookingCheckIn),
+        // Viewing the invoice only needs read access, which this screen already has.
+        BookingStatus.departed => true,
+        BookingStatus.cancelled => false,
+      };
+
+  /// The sheet's main button: move the booking to its next step on the server.
+  Future<void> _mainAction(Booking b) async {
+    final controller = ref.read(bookingsControllerProvider.notifier);
+    try {
+      switch (b.status) {
+        case BookingStatus.confirmed || BookingStatus.upcoming:
+          await controller.checkIn(b);
+          if (mounted) showNzToast(context, 'تم تسجيل الدخول');
+        case BookingStatus.staying:
+          await controller.checkOut(b);
+          if (mounted) showNzToast(context, 'تم تسجيل المغادرة');
+        case BookingStatus.departed:
+          context.push(AppRoutes.invoice, extra: b.id);
+        case BookingStatus.cancelled:
+          break;
+      }
+    } catch (error) {
+      if (mounted) showNzToast(context, errorText(error));
+    }
+  }
+
+  Future<void> _cancel(Booking b) async {
+    try {
+      await ref.read(bookingsControllerProvider.notifier).cancel(b);
+      if (mounted) showNzToast(context, 'تم إلغاء الحجز');
+    } catch (error) {
+      if (mounted) showNzToast(context, errorText(error));
+    }
+  }
+
   void _open(Booking b) {
     final st = _st(b);
+    final can = ref.read(canProvider);
     showNzSheet<void>(
       context,
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
@@ -197,7 +272,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         children: [
                           const TextSpan(text: 'حجز #'),
                           TextSpan(
-                            text: b.id,
+                            text: '${b.id}',
                             style: AppText.num(
                               12.5,
                               weight: FontWeight.w400,
@@ -223,19 +298,19 @@ class _BookingsScreenState extends State<BookingsScreen> {
             children: [
               _Fact('الغرف', b.rooms),
               _Fact('النوع', b.kind),
-              _Fact('الدخول', b.checkIn),
-              _Fact('الخروج', b.checkOut),
+              _Fact('الدخول', fmtDate(b.checkIn)),
+              _Fact('الخروج', fmtDate(b.checkOut)),
             ],
           ),
           const SizedBox(height: 14),
           Row(
             children: [
-              Expanded(child: _Total('الإجمالي · دولار', b.usd)),
+              Expanded(child: _Total('الإجمالي · دولار', fmtNum(b.total))),
               const SizedBox(width: 8),
               Expanded(
                 child: _Total(
-                  'الإجمالي · دينار',
-                  b.iqd,
+                  'المدفوع · دولار',
+                  fmtNum(b.paid),
                   color: AppColors.goldLight,
                 ),
               ),
@@ -270,24 +345,36 @@ class _BookingsScreenState extends State<BookingsScreen> {
                   onPressed: () => Navigator.of(ctx).pop(),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                flex: 2,
-                child: NzPrimaryButton(
-                  label: st.action,
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    final next = st.next;
-                    if (next != null) {
-                      setState(() => _statusOverrides[b.id] = next);
-                    } else if (st == BookingStatus.departed) {
-                      context.push(AppRoutes.invoice);
-                    }
-                  },
+              // Without the permission for this step, the sheet stays read-only.
+              if (_canDoMainAction(can, st)) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: NzPrimaryButton(
+                    label: st.action,
+                    onPressed: () {
+                      Navigator.of(ctx).pop();
+                      _mainAction(b);
+                    },
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
+          // A booking can be cancelled until the guest checks in.
+          if (st.isUpcoming && can.can(Permissions.bookingCancel)) ...[
+            const SizedBox(height: 4),
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                _cancel(b);
+              },
+              child: Text(
+                'إلغاء الحجز',
+                style: AppText.body(14, color: AppColors.goldDeep),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -345,7 +432,7 @@ class _BookingRow extends StatelessWidget {
               SizedBox(
                 width: 48,
                 child: Text(
-                  b.id,
+                  '${b.id}',
                   style: AppText.num(13, color: AppColors.ink3, height: 1),
                 ),
               ),
@@ -411,9 +498,12 @@ class _BookingRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(b.amount, style: AppText.num(13.5, height: 1.3)),
                     Text(
-                      b.currency,
+                      fmtNum(b.total),
+                      style: AppText.num(13.5, height: 1.3),
+                    ),
+                    Text(
+                      'دولار',
                       style: AppText.body(11, color: AppColors.inkFaint),
                     ),
                   ],

@@ -1,85 +1,55 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
-import '../widgets/otp_input.dart';
+import '../controllers/auth_controller.dart';
 
-enum _Step { credentials, otp }
-
-/// Sign in: username + Iraqi mobile number, then a 6-digit code.
-class LoginScreen extends StatefulWidget {
+/// Sign in with username + password.
+/// After a successful login the router moves to home by itself.
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _username = TextEditingController();
-  final _phone = TextEditingController();
-  final _otpKey = GlobalKey<OtpInputState>();
+  final _password = TextEditingController();
 
-  var _step = _Step.credentials;
-  var _phoneError = false;
-  var _remember = false;
-  var _otp = '';
-  var _secondsLeft = 0;
-  Timer? _timer;
-
-  String get _digits => _phone.text.replaceAll(RegExp(r'\D'), '');
+  /// Shown when a field is empty (before calling the server).
+  String? _formError;
 
   @override
   void dispose() {
-    _timer?.cancel();
     _username.dispose();
-    _phone.dispose();
+    _password.dispose();
     super.dispose();
   }
 
-  void _startTimer() {
-    _timer?.cancel();
-    setState(() => _secondsLeft = 60);
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      setState(() => _secondsLeft = (_secondsLeft - 1).clamp(0, 60));
-      if (_secondsLeft == 0) t.cancel();
-    });
-  }
+  void _signIn() {
+    final username = _username.text.trim();
+    final password = _password.text;
 
-  void _sendCode() {
-    if (!RegExp(r'^7\d{9}$').hasMatch(_digits)) {
-      setState(() => _phoneError = true);
+    if (username.isEmpty || password.isEmpty) {
+      setState(() => _formError = 'أدخل اسم المستخدم وكلمة المرور.');
       return;
     }
-    setState(() {
-      _step = _Step.otp;
-      _otp = '';
-    });
-    _startTimer();
-    Future.delayed(
-      const Duration(milliseconds: 60),
-      () => _otpKey.currentState?.focusFirst(),
-    );
-  }
 
-  void _editPhone() {
-    _timer?.cancel();
-    setState(() => _step = _Step.credentials);
-  }
-
-  void _resend() {
-    _otpKey.currentState?.clear();
-    _startTimer();
+    setState(() => _formError = null);
+    ref.read(authControllerProvider.notifier).signIn(username, password);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isOtp = _step == _Step.otp;
+    final auth = ref.watch(authControllerProvider);
+    final error = _formError ?? auth.errorMessage;
+
     return Scaffold(
       backgroundColor: AppColors.paperWarm,
       body: CustomScrollView(
@@ -88,33 +58,33 @@ class _LoginScreenState extends State<LoginScreen> {
             hasScrollBody: false,
             child: Padding(
               padding: EdgeInsets.only(
-                top: MediaQuery.paddingOf(context).top + 28,
+                top: MediaQuery.paddingOf(context).top + 28.h,
               ),
               child: Column(
                 children: [
-                  _Intro(
-                    title: isOtp ? 'رمز التحقق' : 'تسجيل الدخول',
-                    subtitle: isOtp ? 'أدخل الرمز المؤقت لإكمال الدخول.' : 'أدخل اسم المستخدم ورقم جوالك، وسنرسل لك رمز دخول مؤقتاً.',
+                  const _Intro(
+                    title: 'تسجيل الدخول',
+                    subtitle:
+                        'أدخل اسم المستخدم وكلمة المرور للدخول إلى حسابك.',
                   ),
                   const Spacer(),
                   Padding(
                     padding: EdgeInsets.fromLTRB(
-                      16,
-                      24,
-                      16,
-                      34 + MediaQuery.paddingOf(context).bottom,
+                      16.w,
+                      24.h,
+                      16.w,
+                      34.h + MediaQuery.paddingOf(context).bottom,
                     ),
-                    child: Column(
-                      children: [
-                        AnimatedSwitcher(
-                          duration: AppMotion.popIn,
-                          child: isOtp
-                              ? _otpCard(key: const ValueKey('otp'))
-                              : _credentialsCard(key: const ValueKey('cred')),
-                        ),
-                        const SizedBox(height: 18),
-                        const _SupportLine(),
-                      ],
+                    // Keeps the form at a readable width on tablets.
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 480),
+                      child: Column(
+                        children: [
+                          _loginCard(isLoading: auth.isLoading, error: error),
+                          SizedBox(height: 18.h),
+                          const _SupportLine(),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -126,196 +96,51 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _credentialsCard({Key? key}) {
+  Widget _loginCard({required bool isLoading, String? error}) {
     return _StepCard(
-      key: key,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
       children: [
         const _FieldLabel('اسم المستخدم'),
-        const SizedBox(height: 7),
+        SizedBox(height: 7.h),
         NzTextField(
           controller: _username,
           hint: 'اسم المستخدم',
-          height: 54,
+          height: 54.h,
+          error: error != null,
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.right,
           autofillHints: const [AutofillHints.username],
           style: AppText.body(16),
         ),
-        const SizedBox(height: 18),
-        const _FieldLabel('رقم الجوال'),
-        const SizedBox(height: 7),
-        Directionality(
+        SizedBox(height: 18.h),
+        const _FieldLabel('كلمة المرور'),
+        SizedBox(height: 7.h),
+        NzTextField(
+          controller: _password,
+          hint: '••••••••',
+          height: 54.h,
+          error: error != null,
+          obscureText: true,
           textDirection: TextDirection.ltr,
-          child: NzTextField(
-            controller: _phone,
-            hint: '770 000 0000',
-            height: 54,
-            error: _phoneError,
-            keyboardType: TextInputType.phone,
-            autofillHints: const [AutofillHints.telephoneNumberNational],
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[\d ]')),
-            ],
-            style: AppText.num(
-              16,
-              weight: FontWeight.w500,
-              height: 1,
-              letterSpacing: .64,
-            ),
-            onChanged: (_) {
-              if (_phoneError) setState(() => _phoneError = false);
-            },
-            prefix: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: const BoxDecoration(
-                color: AppColors.paper,
-                border: Border(right: BorderSide(color: AppColors.lineStrong)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    LucideIcons.smartphone,
-                    size: 16,
-                    color: AppColors.goldDeep,
-                  ),
-                  const SizedBox(width: 7),
-                  Text(
-                    '+964',
-                    style: AppText.num(
-                      15,
-                      weight: FontWeight.w500,
-                      color: AppColors.ink3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          textAlign: TextAlign.right,
+          autofillHints: const [AutofillHints.password],
+          style: AppText.body(16),
         ),
-        if (_phoneError) ...[
-          const SizedBox(height: 7),
-          Text(
-            'أدخل رقماً من 10 أرقام يبدأ بـ 7.',
-            style: AppText.body(13, color: AppColors.goldDeep),
-          ),
+        if (error != null) ...[
+          SizedBox(height: 10.h),
+          Text(error, style: AppText.body(13, color: AppColors.goldDeep)),
         ],
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: () => setState(() => _remember = !_remember),
-          borderRadius: BorderRadius.circular(8),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 44),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: Checkbox(
-                    value: _remember,
-                    onChanged: (v) => setState(() => _remember = v ?? false),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'تذكّرني على هذا الجهاز',
-                  style: AppText.body(14, color: AppColors.ink3),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
+        SizedBox(height: 22.h),
         NzPrimaryButton(
-          label: 'إرسال رمز التحقق',
-          icon: LucideIcons.messageSquare,
-          onPressed: _sendCode,
-          height: 56,
-          radius: 18,
+          label: isLoading ? 'جارٍ الدخول...' : 'دخول',
+          icon: LucideIcons.logIn,
+          onPressed: _signIn,
+          disabled: isLoading,
+          height: 56.h,
+          radius: 18.r,
           fontSize: 16,
           weight: FontWeight.w500,
           shadow: AppShadows.ink,
-        ),
-      ],
-    );
-  }
-
-  Widget _otpCard({Key? key}) {
-    final full = _otp.length == 6;
-    final d = _digits;
-    final masked = d.length >= 4
-        ? '+964 ${d.substring(0, 3)} ••• ${d.substring(d.length - 4)}'
-        : '+964';
-    return _StepCard(
-      key: key,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
-      children: [
-        const Center(child: _PulsingShield()),
-        const SizedBox(height: 10),
-        Text(
-          'أرسلنا رمزاً من 6 أرقام إلى',
-          textAlign: TextAlign.center,
-          style: AppText.body(14.5, color: AppColors.inkMuted, height: 1.7),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          masked,
-          textAlign: TextAlign.center,
-          textDirection: TextDirection.ltr,
-          style: AppText.num(17, height: 1, letterSpacing: .5),
-        ),
-        Center(
-          child: NzLinkButton(label: 'تغيير الرقم', onPressed: _editPhone),
-        ),
-        const SizedBox(height: 12),
-        OtpInput(key: _otpKey, onChanged: (v) => setState(() => _otp = v)),
-        const SizedBox(height: 22),
-        NzPrimaryButton(
-          label: 'تأكيد ودخول',
-          onPressed: () => context.go(AppRoutes.home),
-          disabled: !full,
-          height: 56,
-          radius: 18,
-          fontSize: 16,
-          weight: FontWeight.w500,
-          shadow: full ? AppShadows.ink : null,
-        ),
-        const SizedBox(height: 14),
-        SizedBox(
-          height: 44,
-          child: _secondsLeft > 0
-              ? Center(
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        const TextSpan(text: 'إعادة الإرسال بعد '),
-                        TextSpan(
-                          text: '0:${_secondsLeft.toString().padLeft(2, '0')}',
-                          style: AppText.num(14, color: AppColors.ink3),
-                        ),
-                      ],
-                    ),
-                    style: AppText.body(14, color: AppColors.inkFaint),
-                  ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'لم يصلك الرمز؟',
-                      style: AppText.body(14, color: AppColors.inkFaint),
-                    ),
-                    const SizedBox(width: 2),
-                    NzLinkButton(
-                      label: 'إعادة الإرسال',
-                      weight: FontWeight.w600,
-                      onPressed: _resend,
-                    ),
-                  ],
-                ),
         ),
       ],
     );
@@ -331,15 +156,15 @@ class _Intro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Column(
         children: [
-          const NzBrandMark(size: 64, radius: 22),
-          const SizedBox(height: 14),
+          NzBrandMark(size: 64.r, radius: 22.r),
+          SizedBox(height: 14.h),
           Text(title, style: AppText.display(28)),
-          const SizedBox(height: 14),
+          SizedBox(height: 14.h),
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 300),
+            constraints: BoxConstraints(maxWidth: 300.w),
             child: Text(
               subtitle,
               textAlign: TextAlign.center,
@@ -353,7 +178,7 @@ class _Intro extends StatelessWidget {
 }
 
 class _StepCard extends StatelessWidget {
-  const _StepCard({super.key, required this.children, required this.padding});
+  const _StepCard({required this.children, required this.padding});
 
   final List<Widget> children;
   final EdgeInsets padding;
@@ -361,7 +186,7 @@ class _StepCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-          radius: 30,
+          radius: 30.r,
           shadow: AppShadows.card,
           padding: padding,
           child: Column(
@@ -372,7 +197,7 @@ class _StepCard extends StatelessWidget {
         .animate()
         .fadeIn(duration: AppMotion.popIn, curve: AppMotion.easeOut)
         .moveY(
-          begin: 10,
+          begin: 10.h,
           end: 0,
           duration: AppMotion.popIn,
           curve: AppMotion.easeOut,
@@ -392,82 +217,32 @@ class _FieldLabel extends StatelessWidget {
   );
 }
 
-/// Shield icon with an expanding gold ring.
-class _PulsingShield extends StatelessWidget {
-  const _PulsingShield();
-
-  @override
-  Widget build(BuildContext context) {
-    final disc = Container(
-      width: 56,
-      height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.goldTint,
-        shape: BoxShape.circle,
-      ),
-    );
-    return SizedBox(
-      width: 56,
-      height: 56,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          disc
-              .animate(onPlay: (c) => c.repeat())
-              .scaleXY(
-                begin: .8,
-                end: 1.8,
-                duration: 2400.ms,
-                curve: AppMotion.easeOut,
-              )
-              .fade(
-                begin: .6,
-                end: 0,
-                duration: 2400.ms,
-                curve: AppMotion.easeOut,
-              ),
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppColors.goldTint,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.goldBorder),
-            ),
-            child: const Icon(
-              LucideIcons.shieldCheck,
-              size: 24,
-              color: AppColors.goldDeep,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SupportLine extends StatelessWidget {
   const _SupportLine();
 
   @override
   Widget build(BuildContext context) {
-    return Text.rich(
-      TextSpan(
-        children: [
-          const TextSpan(text: 'للحصول على حساب راجع مدير الفندق · '),
-          TextSpan(
-            text: 'الدعم الفني',
+    return Column(
+      children: [
+        // Invited users have no password yet: they set one here.
+        TextButton(
+          onPressed: () => context.push(AppRoutes.activate),
+          child: Text(
+            'أول مرة؟ فعّل حسابك',
             style: AppText.body(
-              13,
+              14,
+              weight: FontWeight.w500,
               color: AppColors.goldDeep,
               decoration: TextDecoration.underline,
             ),
           ),
-        ],
-      ),
-      textAlign: TextAlign.center,
-      style: AppText.body(13, color: AppColors.inkFaint, height: 1.7),
+        ),
+        Text(
+          'للحصول على حساب راجع مدير الفندق',
+          textAlign: TextAlign.center,
+          style: AppText.body(13, color: AppColors.inkFaint, height: 1.7),
+        ),
+      ],
     );
   }
 }

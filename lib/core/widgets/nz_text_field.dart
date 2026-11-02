@@ -24,6 +24,7 @@ class NzTextField extends StatefulWidget {
     this.autofillHints,
     this.maxLines = 1,
     this.error = false,
+    this.obscureText = false,
   });
 
   final String? label;
@@ -43,6 +44,9 @@ class NzTextField extends StatefulWidget {
   final Iterable<String>? autofillHints;
   final int maxLines;
   final bool error;
+
+  /// Hides the text (for passwords).
+  final bool obscureText;
 
   @override
   State<NzTextField> createState() => _NzTextFieldState();
@@ -115,6 +119,7 @@ class _NzTextFieldState extends State<NzTextField> {
                   textAlign: widget.textAlign,
                   autofillHints: widget.autofillHints,
                   maxLines: widget.maxLines,
+                  obscureText: widget.obscureText,
                   minLines: 1,
                   style: style,
                   cursorColor: AppColors.gold,

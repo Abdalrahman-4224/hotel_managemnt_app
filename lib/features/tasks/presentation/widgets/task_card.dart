@@ -8,9 +8,7 @@ extension TaskTypeIcon on TaskType {
   IconData get icon => switch (this) {
     TaskType.maintenance => LucideIcons.wrench,
     TaskType.cleaning => LucideIcons.sparkles,
-    TaskType.guestRequest => LucideIcons.conciergeBell,
-    TaskType.inspection => LucideIcons.clipboardCheck,
-    TaskType.admin => LucideIcons.clipboardList,
+    TaskType.generalService => LucideIcons.conciergeBell,
   };
 }
 

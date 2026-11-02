@@ -94,7 +94,7 @@ class RoomTile extends StatelessWidget {
               Text(room.number, style: AppText.num(17, color: fg, height: 1)),
               const SizedBox(height: 6),
               Text(
-                status == RoomStatus.free ? room.type : status.label,
+                status == RoomStatus.free ? room.typeName : status.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppText.body(11.5, color: sub),

@@ -14,48 +14,56 @@ extension BookingStatusX on BookingStatus {
     BookingStatus.confirmed || BookingStatus.upcoming => 'تسجيل دخول',
     BookingStatus.staying => 'تسوية ومغادرة',
     BookingStatus.departed => 'الفاتورة',
-    BookingStatus.cancelled => 'عرض',
-  };
-
-  /// Status after the main action, if it changes.
-  BookingStatus? get next => switch (this) {
-    BookingStatus.confirmed || BookingStatus.upcoming => BookingStatus.staying,
-    BookingStatus.staying => BookingStatus.departed,
-    _ => null,
+    BookingStatus.cancelled => 'إغلاق',
   };
 
   bool get isUpcoming =>
       this == BookingStatus.upcoming || this == BookingStatus.confirmed;
 }
 
+/// A booking as the list shows it. A group (campaign) booking is one
+/// server booking per room; they are shown together as one row.
 class Booking {
   const Booking({
     required this.id,
+    required this.bookingIds,
+    required this.campaignId,
     required this.guest,
     required this.rooms,
-    required this.isGroup,
     required this.status,
-    required this.isToday,
     required this.checkIn,
     required this.checkOut,
-    required this.usd,
-    required this.iqd,
+    required this.total,
+    required this.paid,
   });
 
-  final String id;
+  /// The booking number shown on screen (the first one for a group).
+  final int id;
+
+  /// Every server booking in this row (one for an individual booking).
+  final List<int> bookingIds;
+  final int? campaignId;
   final String guest;
   final String rooms;
-  final bool isGroup;
   final BookingStatus status;
-  final bool isToday;
-  final String checkIn;
-  final String checkOut;
-  final String usd;
-  final String iqd;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
+
+  /// Booking amounts are in US dollars.
+  final double total;
+  final double paid;
+
+  bool get isGroup => campaignId != null;
 
   String get kind => isGroup ? 'حملة' : 'فرد';
 
-  bool get _hasUsd => usd != '—' && usd != '0';
-  String get amount => _hasUsd ? usd : iqd;
-  String get currency => _hasUsd ? 'دولار' : (iqd == '0' ? '—' : 'دينار');
+  bool get isToday {
+    final now = DateTime.now();
+    bool same(DateTime? d) =>
+        d != null &&
+        d.year == now.year &&
+        d.month == now.month &&
+        d.day == now.day;
+    return same(checkIn) || same(checkOut);
+  }
 }

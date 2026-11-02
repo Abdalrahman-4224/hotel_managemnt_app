@@ -14,6 +14,9 @@ Future<int?> showItemSheet(
   required InventoryItem item,
   required String categoryName,
   required int suggested,
+
+  /// Recording a purchase changes the stock, so it needs INVENTORY_UPDATE.
+  bool canReceive = true,
 }) {
   var add = suggested;
   return showNzSheet<int>(
@@ -55,39 +58,40 @@ Future<int?> showItemSheet(
             ],
           ),
           const SizedBox(height: 14),
-          NzCard(
-            radius: 16,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'إدخال مشتريات',
-                    style: AppText.body(14.5, weight: FontWeight.w500),
+          if (canReceive)
+            NzCard(
+              radius: 16,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'إدخال مشتريات',
+                      style: AppText.body(14.5, weight: FontWeight.w500),
+                    ),
                   ),
-                ),
-                NzStepButton(
-                  label: '−',
-                  tooltip: 'إنقاص',
-                  onTap: () => setSheet(() => add = math.max(1, add - 1)),
-                ),
-                SizedBox(
-                  width: 48,
-                  child: Text(
-                    '$add',
-                    textAlign: TextAlign.center,
-                    style: AppText.num(20, height: 1),
+                  NzStepButton(
+                    label: '−',
+                    tooltip: 'إنقاص',
+                    onTap: () => setSheet(() => add = math.max(1, add - 1)),
                   ),
-                ),
-                NzStepButton(
-                  label: '+',
-                  tooltip: 'زيادة',
-                  dark: true,
-                  onTap: () => setSheet(() => add++),
-                ),
-              ],
+                  SizedBox(
+                    width: 48,
+                    child: Text(
+                      '$add',
+                      textAlign: TextAlign.center,
+                      style: AppText.num(20, height: 1),
+                    ),
+                  ),
+                  NzStepButton(
+                    label: '+',
+                    tooltip: 'زيادة',
+                    dark: true,
+                    onTap: () => setSheet(() => add++),
+                  ),
+                ],
+              ),
             ),
-          ),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -97,16 +101,18 @@ Future<int?> showItemSheet(
                   onPressed: () => Navigator.of(ctx).pop(),
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                flex: 2,
-                child: NzPrimaryButton(
-                  label: 'إدخال $add إلى المخزن',
-                  height: 52,
-                  fontSize: 15,
-                  onPressed: () => Navigator.of(ctx).pop(add),
+              if (canReceive) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: NzPrimaryButton(
+                    label: 'إدخال $add إلى المخزن',
+                    height: 52,
+                    fontSize: 15,
+                    onPressed: () => Navigator.of(ctx).pop(add),
+                  ),
                 ),
-              ),
+              ],
             ],
           ),
         ],
@@ -149,14 +155,13 @@ class _NewItemDraft extends ChangeNotifier {
     notifyListeners();
   }
 
-  InventoryItem? build() => type == null
+  NewInventoryItem? build() => type == null
       ? null
-      : InventoryItem(
+      : NewInventoryItem(
           name: type!,
-          categoryId: category!.id,
+          category: category!.name,
           quantity: int.tryParse(qty.text) ?? 0,
           minimum: int.tryParse(min.text) ?? 0,
-          unitPrice: '—',
         );
 
   @override
@@ -168,13 +173,13 @@ class _NewItemDraft extends ChangeNotifier {
 }
 
 /// Adds a product type (from the manager's list) to the stock.
-Future<InventoryItem?> showNewItemSheet(
+Future<NewInventoryItem?> showNewItemSheet(
   BuildContext context, {
   required List<InventoryCategory> categories,
   required Set<String> inStock,
 }) {
   final d = _NewItemDraft();
-  return showNzTallSheet<InventoryItem>(
+  return showNzTallSheet<NewInventoryItem>(
     context,
     heightFactor: .9,
     shrinkWrap: true,

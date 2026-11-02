@@ -1,3 +1,5 @@
+import '../../../../core/utils/formatters.dart';
+
 enum CampaignStatus { staying, upcoming, departed }
 
 extension CampaignStatusX on CampaignStatus {
@@ -16,39 +18,11 @@ extension CampaignStatusX on CampaignStatus {
   String get action => switch (this) {
     CampaignStatus.staying => 'تسوية ومغادرة',
     CampaignStatus.upcoming => 'تسجيل دخول الحملة',
-    CampaignStatus.departed => 'الفاتورة',
+    CampaignStatus.departed => 'إغلاق',
   };
 }
 
-/// An amount held in both currencies (`—` when unused).
-class DualAmount {
-  const DualAmount(this.usd, this.iqd);
-
-  final String usd;
-  final String iqd;
-
-  /// The first currency in use, with a short unit suffix.
-  String get short => usd != '—' ? '$usd \$' : '$iqd د.ع';
-}
-
-class CampaignMember {
-  const CampaignMember(this.name, this.room, this.nights, this.amount);
-
-  final String name;
-  final String room;
-  final String nights;
-  final String amount;
-
-  String get initial => name.substring(0, 1);
-}
-
-class CampaignEvent {
-  const CampaignEvent(this.what, this.when);
-
-  final String what;
-  final String when;
-}
-
+/// A group booking. Amounts are in US dollars.
 class Campaign {
   const Campaign({
     required this.id,
@@ -57,39 +31,32 @@ class Campaign {
     required this.phone,
     required this.rooms,
     required this.heads,
-    required this.nights,
     required this.checkIn,
     required this.checkOut,
     required this.status,
-    required this.priceBasis,
-    required this.document,
     required this.total,
     required this.paid,
-    required this.due,
-    required this.paidPercent,
-    required this.members,
-    required this.trail,
   });
 
-  final String id;
+  final int id;
   final String name;
   final String manager;
   final String phone;
   final List<String> rooms;
   final int heads;
-  final int nights;
-  final String checkIn;
-  final String checkOut;
+  final DateTime? checkIn;
+  final DateTime? checkOut;
   final CampaignStatus status;
-  final String priceBasis;
-  final String document;
-  final DualAmount total;
-  final DualAmount paid;
-  final DualAmount due;
-  final int paidPercent;
-  final List<CampaignMember> members;
-  final List<CampaignEvent> trail;
+  final double total;
+  final double paid;
 
-  String get dateRange =>
-      '${checkIn.split(' · ').first}  ←  ${checkOut.split(' · ').first}';
+  double get due => total - paid < 0 ? 0 : total - paid;
+
+  int get nights => checkIn == null || checkOut == null
+      ? 0
+      : checkOut!.difference(checkIn!).inDays;
+
+  int get paidPercent => total <= 0 ? 0 : (paid * 100 / total).round();
+
+  String get dateRange => '${fmtDate(checkIn)}  ←  ${fmtDate(checkOut)}';
 }

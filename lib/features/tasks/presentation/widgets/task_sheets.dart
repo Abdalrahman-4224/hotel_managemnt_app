@@ -3,7 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
-import '../../data/data_sources/tasks_local_data_source.dart';
+import '../../../rooms/domain/entities/floors.dart';
+import '../../../rooms/domain/entities/room.dart';
 import '../../domain/entities/task_item.dart';
 
 /// Confirms finishing a task. Resolves to `true` when confirmed.
@@ -21,13 +22,6 @@ Future<bool?> showCompleteTaskSheet(BuildContext context, TaskItem t) {
           style: AppText.body(14, color: AppColors.inkMuted),
         ),
         const SizedBox(height: 14),
-        const NzTextField(
-          label: 'ملاحظة الإنجاز (اختيارية)',
-          hint: 'مثال: استُبدل الصنبور بالكامل',
-          height: 92,
-          maxLines: 4,
-        ),
-        const SizedBox(height: 14),
         NzPrimaryButton(
           label: 'تأكيد الإتمام',
           onPressed: () => Navigator.of(ctx).pop(true),
@@ -41,11 +35,12 @@ Future<bool?> showCompleteTaskSheet(BuildContext context, TaskItem t) {
 class _NewTaskDraft extends ChangeNotifier {
   var type = TaskType.maintenance;
   var urgent = false;
-  String? room;
-  String? to;
+  Room? room;
+  TaskPerson? to;
   String? error;
   var mapOpen = false;
   final title = TextEditingController();
+  final details = TextEditingController();
 
   void update(VoidCallback change) {
     change();
@@ -53,7 +48,7 @@ class _NewTaskDraft extends ChangeNotifier {
   }
 
   /// Validates and builds the task, or flags the first missing field.
-  TaskItem? build(String fromId) {
+  NewTask? build() {
     if (title.text.trim().isEmpty) {
       update(() => error = 'title');
       return null;
@@ -62,33 +57,37 @@ class _NewTaskDraft extends ChangeNotifier {
       update(() => error = 'to');
       return null;
     }
-    return TaskItem(
-      id: 't${DateTime.now().millisecondsSinceEpoch}',
+    // The server has one text field: the title, then the details on the next lines.
+    final more = details.text.trim();
+    return NewTask(
       type: type,
-      title: title.text.trim(),
-      location: room == null ? '' : 'غرفة $room',
-      fromId: fromId,
-      toId: to!,
-      status: TaskStatus.fresh,
+      description: more.isEmpty
+          ? title.text.trim()
+          : '${title.text.trim()}\n$more',
+      roomId: room?.id,
+      floorId: room?.floorId,
+      assignee: to!,
       urgent: urgent,
-      at: 'الآن',
     );
   }
 
   @override
   void dispose() {
     title.dispose();
+    details.dispose();
     super.dispose();
   }
 }
 
-/// Form for a new task. Resolves to the created task, or null.
-Future<TaskItem?> showNewTaskSheet(
+/// Form for a new task. Resolves to the task to send, or null.
+/// [people] are who it can go to; [floors] are for picking a room.
+Future<NewTask?> showNewTaskSheet(
   BuildContext context, {
-  required String fromId,
+  required List<TaskPerson> people,
+  required List<Floor> floors,
 }) {
   final d = _NewTaskDraft();
-  return showNzTallSheet<TaskItem>(
+  return showNzTallSheet<NewTask>(
     context,
     heightFactor: .9,
     header: (ctx) => Text('مهمة جديدة', style: AppText.display(21)),
@@ -129,10 +128,11 @@ Future<TaskItem?> showNewTaskSheet(
           const SizedBox(height: 16),
           const _Label('الغرفة (اختياري)'),
           const SizedBox(height: 7),
-          _RoomPicker(draft: d),
+          _RoomPicker(draft: d, floors: floors),
           const SizedBox(height: 16),
-          const NzTextField(
+          NzTextField(
             label: 'التفاصيل (اختياري)',
+            controller: d.details,
             height: 80,
             maxLines: 4,
           ),
@@ -148,14 +148,14 @@ Future<TaskItem?> showNewTaskSheet(
             ],
           ),
           const SizedBox(height: 16),
-          const _Label('إرسال إلى · فنيو الصيانة'),
-          for (final id in TasksLocalDataSource.assignees) ...[
+          const _Label('إرسال إلى'),
+          for (final person in people) ...[
             const SizedBox(height: 8),
             _PersonOption(
-              person: TasksLocalDataSource.people[id]!,
-              selected: d.to == id,
+              person: person,
+              selected: d.to?.id == person.id,
               onTap: () => d.update(() {
-                d.to = id;
+                d.to = person;
                 d.error = null;
               }),
             ),
@@ -183,7 +183,7 @@ Future<TaskItem?> showNewTaskSheet(
             label: 'إرسال المهمة',
             icon: LucideIcons.send,
             onPressed: () {
-              final task = d.build(fromId);
+              final task = d.build();
               if (task != null) Navigator.of(ctx).pop(task);
             },
           ),
@@ -195,9 +195,10 @@ Future<TaskItem?> showNewTaskSheet(
 
 /// Collapsible room map for picking the task's room.
 class _RoomPicker extends StatelessWidget {
-  const _RoomPicker({required this.draft});
+  const _RoomPicker({required this.draft, required this.floors});
 
   final _NewTaskDraft draft;
+  final List<Floor> floors;
 
   @override
   Widget build(BuildContext context) {
@@ -225,7 +226,9 @@ class _RoomPicker extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    d.room == null ? 'اختر من خريطة الغرف' : 'غرفة ${d.room}',
+                    d.room == null
+                        ? 'اختر من خريطة الغرف'
+                        : 'غرفة ${d.room!.number}',
                     style: AppText.body(15, weight: FontWeight.w500),
                   ),
                 ),
@@ -250,11 +253,10 @@ class _RoomPicker extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (final (i, (name, rooms))
-                        in TasksLocalDataSource.roomMap.indexed) ...[
+                    for (final (i, floor) in floors.indexed) ...[
                       if (i > 0) const SizedBox(height: 10),
                       Text(
-                        name,
+                        floor.name,
                         style: AppText.body(12.5, color: AppColors.inkMuted),
                       ),
                       const SizedBox(height: 6),
@@ -262,12 +264,12 @@ class _RoomPicker extends StatelessWidget {
                         columns: 6,
                         spacing: 6,
                         children: [
-                          for (final no in rooms)
+                          for (final room in floor.rooms)
                             _RoomChip(
-                              number: no,
-                              selected: d.room == no,
+                              number: room.number,
+                              selected: d.room?.id == room.id,
                               onTap: () => d.update(() {
-                                d.room = d.room == no ? null : no;
+                                d.room = d.room?.id == room.id ? null : room;
                                 d.mapOpen = false;
                               }),
                             ),
@@ -376,7 +378,7 @@ class _PersonOption extends StatelessWidget {
                   style: AppText.body(15, weight: FontWeight.w500),
                 ),
                 Text(
-                  person.online ? 'متصل الآن' : 'غير متصل',
+                  person.subtitle,
                   style: AppText.body(12.5, color: AppColors.inkMuted),
                 ),
               ],

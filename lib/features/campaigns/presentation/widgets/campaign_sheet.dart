@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/campaign.dart';
 import 'campaign_card.dart';
 
-/// Full campaign details: facts, money position, rooms, members, history.
-Future<void> showCampaignSheet(BuildContext context, Campaign c) {
+/// Full campaign details: facts, money position, rooms.
+/// [onAction] runs the main button (check in / check out); it is hidden when
+/// [canAct] is false.
+Future<void> showCampaignSheet(
+  BuildContext context,
+  Campaign c, {
+  required VoidCallback onAction,
+  required bool canAct,
+}) {
   return showNzTallSheet<void>(
     context,
     header: (ctx) => Row(
@@ -19,7 +27,7 @@ Future<void> showCampaignSheet(BuildContext context, Campaign c) {
                   children: [
                     const TextSpan(text: 'حملة #'),
                     TextSpan(
-                      text: c.id,
+                      text: '${c.id}',
                       style: AppText.num(
                         12.5,
                         weight: FontWeight.w400,
@@ -46,10 +54,10 @@ Future<void> showCampaignSheet(BuildContext context, Campaign c) {
           children: [
             NzFact('مسؤول الحملة', c.manager),
             NzFact('الهاتف', c.phone),
-            NzFact('الدخول', c.checkIn),
-            NzFact('الخروج', c.checkOut),
-            NzFact('أساس السعر', c.priceBasis),
-            NzFact('المستند', c.document),
+            NzFact('الدخول', fmtDate(c.checkIn)),
+            NzFact('الخروج', fmtDate(c.checkOut)),
+            NzFact('الأفراد', '${c.heads}'),
+            NzFact('الليالي', '${c.nights}'),
           ],
         ),
         const SizedBox(height: 16),
@@ -77,40 +85,22 @@ Future<void> showCampaignSheet(BuildContext context, Campaign c) {
               ),
           ],
         ),
-        if (c.members.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text('الأفراد', style: AppText.display(16, height: 1.4)),
-          for (final m in c.members) ...[
-            const SizedBox(height: 8),
-            _MemberRow(m),
-          ],
-        ],
-        const SizedBox(height: 16),
-        Text('سجل الحملة', style: AppText.display(16, height: 1.4)),
-        const SizedBox(height: 10),
-        for (final t in c.trail) _TrailItem(t),
       ],
     ),
-    footer: (ctx) => Row(
-      children: [
-        Expanded(
-          child: NzOutlineButton(
-            label: 'تعديل التوزيع',
-            height: 54,
-            fontSize: 14.5,
-            onPressed: () {},
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: NzPrimaryButton(
+    footer: (ctx) => canAct
+        ? NzPrimaryButton(
             label: c.status.action,
             fontSize: 14.5,
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              onAction();
+            },
+          )
+        : NzOutlineButton(
+            label: 'إغلاق',
+            height: 54,
             onPressed: () => Navigator.of(ctx).pop(),
           ),
-        ),
-      ],
-    ),
   );
 }
 
@@ -126,6 +116,7 @@ class _MoneyCard extends StatelessWidget {
       ('المدفوع', c.paid),
       ('المتبقي', c.due),
     ];
+    // Booking amounts are in US dollars.
     return NzCard(
       color: AppColors.ink,
       borderColor: null,
@@ -149,131 +140,15 @@ class _MoneyCard extends StatelessWidget {
                   ),
                 ),
                 NzAmount(
-                  v.usd,
+                  fmtNum(v),
                   'دولار',
                   size: 16,
                   color: AppColors.onInk,
                   unitColor: AppColors.onInkMuted,
                 ),
-                const SizedBox(width: 10),
-                NzAmount(
-                  v.iqd,
-                  'دينار',
-                  size: 15,
-                  color: AppColors.goldLight,
-                  unitColor: AppColors.onInkMuted,
-                ),
               ],
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _MemberRow extends StatelessWidget {
-  const _MemberRow(this.m);
-
-  final CampaignMember m;
-
-  @override
-  Widget build(BuildContext context) {
-    return NzCard(
-      radius: 14,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      child: Row(
-        children: [
-          NzInitialAvatar(m.initial, size: 34, fontSize: 13),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(m.name, style: AppText.body(14, weight: FontWeight.w500)),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      const TextSpan(text: 'غرفة '),
-                      TextSpan(
-                        text: m.room,
-                        style: AppText.num(
-                          12,
-                          weight: FontWeight.w400,
-                          color: AppColors.inkMuted,
-                        ),
-                      ),
-                      const TextSpan(text: ' · '),
-                      TextSpan(
-                        text: m.nights,
-                        style: AppText.num(
-                          12,
-                          weight: FontWeight.w400,
-                          color: AppColors.inkMuted,
-                        ),
-                      ),
-                      const TextSpan(text: ' ليالٍ'),
-                    ],
-                  ),
-                  style: AppText.body(12, color: AppColors.inkMuted),
-                ),
-              ],
-            ),
-          ),
-          Text(m.amount, style: AppText.num(13.5, height: 1)),
-        ],
-      ),
-    );
-  }
-}
-
-class _TrailItem extends StatelessWidget {
-  const _TrailItem(this.t);
-
-  final CampaignEvent t;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            width: 14,
-            child: Column(
-              children: [
-                const SizedBox(height: 5),
-                Container(
-                  width: 10,
-                  height: 10,
-                  decoration: const BoxDecoration(
-                    color: AppColors.gold,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Expanded(
-                  child: Container(width: 1.5, color: AppColors.goldBorderSoft),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(t.what, style: AppText.body(14, height: 1.5)),
-                  Text(
-                    t.when,
-                    style: AppText.body(12, color: AppColors.inkMuted),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );

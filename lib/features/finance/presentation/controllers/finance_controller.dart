@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../../data/data_sources/finance_local_data_source.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../domain/entities/finance_transaction.dart';
+import '../../domain/repositories/finance_repository.dart';
 
 enum Period { today, week, month, all }
 
@@ -36,9 +37,21 @@ class FinanceFilter {
   final Period period;
 
   bool matches(FinanceTransaction t) =>
+      inPeriod(t) &&
       (kind == null || t.kind == kind) &&
       (currency == null || t.currency == currency) &&
       (method == null || t.method == method);
+
+  bool inPeriod(FinanceTransaction t) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return switch (period) {
+      Period.today => !t.when.isBefore(today),
+      Period.week => !t.when.isBefore(today.subtract(const Duration(days: 6))),
+      Period.month => t.when.year == now.year && t.when.month == now.month,
+      Period.all => true,
+    };
+  }
 
   FinanceFilter copyWith({
     TxKind? Function()? kind,
@@ -70,15 +83,56 @@ class TxGroup {
       '${items.length} ${items.length == 1 ? 'حركة' : 'حركات'}';
 }
 
-class FinanceController extends ChangeNotifier {
-  FinanceController({
-    FinanceLocalDataSource source = const FinanceLocalDataSource(),
-  }) : totals = source.getTotals(),
-       _rows = source.getTransactions();
+const _months = [
+  'كانون الثاني', 'شباط', 'آذار', 'نيسان', 'أيار', 'حزيران', //
+  'تموز', 'آب', 'أيلول', 'تشرين الأول', 'تشرين الثاني', 'كانون الأول',
+];
 
-  final FinanceTotals totals;
-  List<FinanceTransaction> _rows;
+class FinanceController extends ChangeNotifier {
+  FinanceController({required this.repository});
+
+  final FinanceRepository repository;
+  List<FinanceTransaction> _rows = const [];
   var _filter = const FinanceFilter();
+
+  // First load state. After that, the old rows stay on screen while reloading.
+  var isLoading = true;
+  Object? error;
+
+  /// Loads the rows from the server. Errors are kept in [error].
+  Future<void> load() async {
+    try {
+      _rows = await repository.getTransactions();
+      error = null;
+    } catch (e) {
+      error = e;
+    }
+    isLoading = false;
+    notifyListeners();
+  }
+
+  /// Income, expense and net for the chosen period, per currency.
+  FinanceTotals get totals {
+    double sum(TxKind kind, TxCurrency currency) => _rows
+        .where(
+          (t) =>
+              _filter.inPeriod(t) && t.kind == kind && t.currency == currency,
+        )
+        .fold(0, (n, t) => n + t.value);
+    final inUsd = sum(TxKind.income, TxCurrency.usd);
+    final inIqd = sum(TxKind.income, TxCurrency.iqd);
+    final outUsd = sum(TxKind.expense, TxCurrency.usd);
+    final outIqd = sum(TxKind.expense, TxCurrency.iqd);
+    String net(double v) => v < 0 ? '−${fmtNum(-v)}' : fmtNum(v);
+    return FinanceTotals(
+      incomeUsd: fmtNum(inUsd),
+      incomeIqd: fmtNum(inIqd),
+      expenseUsd: fmtNum(outUsd),
+      expenseIqd: fmtNum(outIqd),
+      netUsd: net(inUsd - outUsd),
+      netIqd: net(inIqd - outIqd),
+    );
+  }
 
   FinanceFilter get filter => _filter;
 
@@ -93,8 +147,11 @@ class FinanceController extends ChangeNotifier {
   int countForDraft(FinanceFilter draft) =>
       _rows.where(draft.copyWith(kind: () => _filter.kind).matches).length;
 
-  String get periodLine =>
-      'الفترة: ${_filter.period == Period.month ? 'آب 2026' : _filter.period.label}';
+  String get periodLine {
+    final now = DateTime.now();
+    final month = '${_months[now.month - 1]} ${now.year}';
+    return 'الفترة: ${_filter.period == Period.month ? month : _filter.period.label}';
+  }
 
   List<ActiveFilter> get activeFilters => [
     if (_filter.currency != null)
@@ -140,15 +197,26 @@ class FinanceController extends ChangeNotifier {
 
   void clearFilters() => _set(FinanceFilter(kind: _filter.kind));
 
-  void reverse(FinanceTransaction t) {
-    _rows = [t.reversed(), ..._rows];
-    notifyListeners();
+  /// Records the correcting entry: same amount, opposite direction.
+  /// Errors are rethrown so the sheet can show them.
+  Future<void> reverse(FinanceTransaction t) async {
+    await repository.addTransaction(
+      NewTransaction(
+        kind: t.isIncome ? TxKind.expense : TxKind.income,
+        reference: 'عكس: ${t.reference}',
+        method: t.method,
+        amount: t.value,
+        currency: t.currency,
+        bookingId: t.bookingId,
+      ),
+    );
+    await load();
   }
 
-  void add(FinanceTransaction t) {
-    _rows = [t, ..._rows];
+  Future<void> add(NewTransaction t) async {
+    await repository.addTransaction(t);
     _filter = FinanceFilter(period: _filter.period);
-    notifyListeners();
+    await load();
   }
 
   void _set(FinanceFilter f) {

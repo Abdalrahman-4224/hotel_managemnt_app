@@ -23,15 +23,9 @@ class StockLevelTag extends StatelessWidget {
 }
 
 class InventoryTable extends StatelessWidget {
-  const InventoryTable({
-    super.key,
-    required this.items,
-    required this.categoryName,
-    required this.onOpen,
-  });
+  const InventoryTable({super.key, required this.items, required this.onOpen});
 
   final List<InventoryItem> items;
-  final String Function(String id) categoryName;
   final ValueChanged<InventoryItem> onOpen;
 
   @override
@@ -53,7 +47,7 @@ class InventoryTable extends StatelessWidget {
             if (i > 0) const NzDivider(),
             _Row(
               item: items[i],
-              category: categoryName(items[i].categoryId),
+              category: items[i].category,
               onTap: () => onOpen(items[i]),
             ),
           ],

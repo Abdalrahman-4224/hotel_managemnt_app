@@ -1,1 +1,0 @@
-Authentication domain entities belong in this directory.

@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-import '../../../rooms/data/data_sources/rooms_local_data_source.dart';
+import '../../../rooms/domain/entities/floors.dart';
 import '../../../rooms/domain/entities/room.dart';
 import '../../domain/entities/booking_quote.dart';
+import '../../domain/entities/new_booking.dart';
+import '../../domain/repositories/bookings_repository.dart';
 
 class DiscountOption {
   const DiscountOption(this.label, this.type, this.defaultValue);
@@ -16,18 +18,29 @@ class DiscountOption {
 
 /// State of the add-booking flow (room picking + booking details).
 class AddBookingController extends ChangeNotifier {
-  AddBookingController({
-    RoomsLocalDataSource source = const RoomsLocalDataSource(),
-  }) : floors = source.getFloors();
+  AddBookingController({required this.floors, required this.repository});
 
   final List<Floor> floors;
+  final BookingsRepository repository;
+
+  // Guest (or, for a group, the person in charge) details.
+  final groupName = TextEditingController();
+  final guestName = TextEditingController();
+  final phone = TextEditingController();
+  final nationalId = TextEditingController();
+
+  /// Holds on the picked rooms while the details form is open.
+  var _lockIds = <int>[];
+  var isSaving = false;
 
   var isGroup = false;
   var floor = 0;
   final selected = <String>[];
 
-  DateTime checkIn = DateTime(2026, 10, 10);
-  DateTime checkOut = DateTime(2026, 10, 13);
+  DateTime checkIn = DateUtils.dateOnly(DateTime.now());
+  DateTime checkOut = DateUtils.dateOnly(
+    DateTime.now().add(const Duration(days: 1)),
+  );
   int? _headsOverride;
 
   var mealIncluded = 0; // 0: مع إفطار, 1: بدون
@@ -146,4 +159,62 @@ class AddBookingController extends ChangeNotifier {
     discount = o.type;
     discountValue = o.defaultValue;
   });
+
+  /// Step 1 → 2: hold the picked rooms so nobody else books them meanwhile.
+  Future<void> holdRooms() async {
+    _lockIds = await repository.holdRooms([for (final r in pickedRooms) r.id]);
+  }
+
+  /// The form was closed without confirming.
+  Future<void> releaseRooms() async {
+    await repository.releaseHolds(_lockIds);
+    _lockIds = [];
+  }
+
+  /// The first problem with the form, or null when it can be sent.
+  String? validate() {
+    if (isGroup && groupName.text.trim().isEmpty) return 'اكتب اسم الحملة.';
+    if (guestName.text.trim().isEmpty) return 'اكتب اسم النزيل.';
+    if (nationalId.text.trim().isEmpty) return 'اكتب رقم الهوية أو الجواز.';
+    if (!checkOut.isAfter(checkIn)) return 'تاريخ الخروج بعد تاريخ الدخول.';
+    return null;
+  }
+
+  /// Step 2: create the booking on the server. Errors are rethrown.
+  Future<void> confirm() async {
+    set(() => isSaving = true);
+    try {
+      final q = quote;
+      await repository.createBooking(
+        NewBooking(
+          rooms: pickedRooms,
+          isGroup: isGroup,
+          groupName: groupName.text.trim(),
+          guestName: guestName.text.trim(),
+          phone: phone.text.trim(),
+          nationalId: nationalId.text.trim(),
+          heads: heads,
+          checkIn: checkIn,
+          checkOut: checkOut,
+          withBreakfast: mealIncluded == 0,
+          total: q.total,
+          receivedNow: q.receivedNow,
+          payByCard: payByCard == 1,
+        ),
+      );
+      // confirmBooking ends the holds itself.
+      _lockIds = [];
+    } finally {
+      set(() => isSaving = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    groupName.dispose();
+    guestName.dispose();
+    phone.dispose();
+    nationalId.dispose();
+    super.dispose();
+  }
 }

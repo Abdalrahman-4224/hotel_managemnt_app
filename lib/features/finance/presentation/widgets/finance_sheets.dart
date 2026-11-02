@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/finance_transaction.dart';
 import '../controllers/finance_controller.dart';
@@ -10,8 +11,11 @@ import '../controllers/finance_controller.dart';
 Future<void> showTransactionDetail(
   BuildContext context,
   FinanceController controller,
-  FinanceTransaction tx,
-) {
+  FinanceTransaction tx, {
+
+  /// A reversing entry is itself a new transaction, so it needs FINANCE_CREATE.
+  bool canReverse = true,
+}) {
   return showNzSheet<void>(
     context,
     builder: (ctx) => Column(
@@ -73,18 +77,24 @@ Future<void> showTransactionDetail(
                 onPressed: () => Navigator.of(ctx).pop(),
               ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: NzPrimaryButton(
-                label: 'حركة معاكسة',
-                height: 52,
-                fontSize: 15,
-                onPressed: () {
-                  controller.reverse(tx);
-                  Navigator.of(ctx).pop();
-                },
+            if (canReverse) ...[
+              const SizedBox(width: 10),
+              Expanded(
+                child: NzPrimaryButton(
+                  label: 'حركة معاكسة',
+                  height: 52,
+                  fontSize: 15,
+                  onPressed: () async {
+                    Navigator.of(ctx).pop();
+                    try {
+                      await controller.reverse(tx);
+                    } catch (e) {
+                      if (context.mounted) showNzToast(context, errorText(e));
+                    }
+                  },
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ],
@@ -331,23 +341,28 @@ Future<void> showNewTransaction(
             const SizedBox(height: 14),
             NzPrimaryButton(
               label: 'تسجيل الحركة',
-              onPressed: () {
-                if (amount.text.isEmpty || reference.text.trim().isEmpty) {
+              onPressed: () async {
+                final value = double.tryParse(amount.text.replaceAll(',', ''));
+                if (value == null ||
+                    value <= 0 ||
+                    reference.text.trim().isEmpty) {
                   setSheet(() => error = true);
                   return;
                 }
-                controller.add(
-                  FinanceTransaction(
-                    date: 'اليوم',
-                    kind: kind,
-                    reference: reference.text.trim(),
-                    method: method,
-                    staff: 'أنت',
-                    amount: amount.text,
-                    currency: currency,
-                  ),
-                );
                 Navigator.of(ctx).pop();
+                try {
+                  await controller.add(
+                    NewTransaction(
+                      kind: kind,
+                      reference: reference.text.trim(),
+                      method: method,
+                      amount: value,
+                      currency: currency,
+                    ),
+                  );
+                } catch (e) {
+                  if (context.mounted) showNzToast(context, errorText(e));
+                }
               },
             ),
           ],

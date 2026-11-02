@@ -8,9 +8,16 @@ import '../widgets/transactions_table.dart';
 
 /// "كل الحركات" – the transactions table expanded to full screen.
 class FinanceFullTableScreen extends StatelessWidget {
-  const FinanceFullTableScreen({super.key, required this.controller});
+  const FinanceFullTableScreen({
+    super.key,
+    required this.controller,
+    required this.canReverse,
+  });
 
   final FinanceController controller;
+
+  /// Whether this user may record the reversing entry (FINANCE_CREATE).
+  final bool canReverse;
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +56,12 @@ class FinanceFullTableScreen extends StatelessWidget {
                 children: [
                   TransactionsTable(
                     groups: controller.groups,
-                    onOpen: (t) =>
-                        showTransactionDetail(context, controller, t),
+                    onOpen: (t) => showTransactionDetail(
+                      context,
+                      controller,
+                      t,
+                      canReverse: canReverse,
+                    ),
                   ),
                 ],
               ),

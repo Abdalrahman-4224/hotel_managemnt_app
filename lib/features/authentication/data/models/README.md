@@ -1,1 +1,0 @@
-Authentication data models belong in this directory.

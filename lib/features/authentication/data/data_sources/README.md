@@ -1,1 +1,0 @@
-Authentication data sources belong in this directory.

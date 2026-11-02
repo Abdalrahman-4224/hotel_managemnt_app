@@ -1,12 +1,11 @@
-enum TaskType { maintenance, cleaning, guestRequest, inspection, admin }
+/// Task types the server accepts (tasks.task_type).
+enum TaskType { maintenance, cleaning, generalService }
 
 extension TaskTypeLabel on TaskType {
   String get label => switch (this) {
     TaskType.maintenance => 'صيانة',
     TaskType.cleaning => 'تنظيف',
-    TaskType.guestRequest => 'طلب نزيل',
-    TaskType.inspection => 'فحص دوري',
-    TaskType.admin => 'متابعة إدارية',
+    TaskType.generalService => 'خدمة عامة',
   };
 }
 
@@ -20,13 +19,23 @@ extension TaskStatusLabel on TaskStatus {
   };
 }
 
+/// Someone a task can be sent to.
 class TaskPerson {
-  const TaskPerson(this.id, this.name, this.initial, {this.online = false});
+  const TaskPerson({
+    required this.id,
+    required this.name,
+    required this.subtitle,
+    required this.departmentId,
+  });
 
-  final String id;
+  final int id;
   final String name;
-  final String initial;
-  final bool online;
+
+  /// Role and department, shown under the name.
+  final String subtitle;
+  final int? departmentId;
+
+  String get initial => name.isEmpty ? '؟' : name.substring(0, 1);
 }
 
 class TaskItem {
@@ -36,31 +45,44 @@ class TaskItem {
     required this.title,
     required this.location,
     required this.fromId,
+    required this.fromName,
     required this.toId,
+    required this.toName,
     required this.status,
     required this.at,
     this.urgent = false,
   });
 
-  final String id;
+  final int id;
   final TaskType type;
   final String title;
   final String location;
-  final String fromId;
-  final String toId;
+  final int? fromId;
+  final String fromName;
+  final int? toId;
+  final String toName;
   final TaskStatus status;
+
+  /// When it was sent, e.g. "09:40" or "19/8 09:40".
   final String at;
   final bool urgent;
+}
 
-  TaskItem withStatus(TaskStatus s) => TaskItem(
-    id: id,
-    type: type,
-    title: title,
-    location: location,
-    fromId: fromId,
-    toId: toId,
-    status: s,
-    at: at,
-    urgent: urgent,
-  );
+/// What the new-task form collects.
+class NewTask {
+  const NewTask({
+    required this.type,
+    required this.description,
+    required this.roomId,
+    required this.floorId,
+    required this.assignee,
+    required this.urgent,
+  });
+
+  final TaskType type;
+  final String description;
+  final int? roomId;
+  final int? floorId;
+  final TaskPerson assignee;
+  final bool urgent;
 }

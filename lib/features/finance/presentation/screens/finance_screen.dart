@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
+import '../../../authentication/domain/entities/permissions.dart';
+import '../../../authentication/presentation/controllers/permissions_controller.dart';
+import '../../data/repositories/finance_repository_impl.dart';
 import '../controllers/finance_controller.dart';
 import '../widgets/finance_sheets.dart';
 import '../widgets/transactions_table.dart';
 import 'finance_full_table_screen.dart';
 
-class FinanceScreen extends StatefulWidget {
+class FinanceScreen extends ConsumerStatefulWidget {
   const FinanceScreen({super.key});
 
   @override
-  State<FinanceScreen> createState() => _FinanceScreenState();
+  ConsumerState<FinanceScreen> createState() => _FinanceScreenState();
 }
 
-class _FinanceScreenState extends State<FinanceScreen> {
-  final _controller = FinanceController();
+class _FinanceScreenState extends ConsumerState<FinanceScreen> {
+  late final _controller = FinanceController(
+    repository: ref.read(financeRepositoryProvider),
+  )..load();
 
   @override
   void dispose() {
@@ -24,10 +30,13 @@ class _FinanceScreenState extends State<FinanceScreen> {
   }
 
   void _expand() {
+    final canReverse = ref.read(canProvider).can(Permissions.financeCreate);
     Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder<void>(
-        pageBuilder: (_, _, _) =>
-            FinanceFullTableScreen(controller: _controller),
+        pageBuilder: (_, _, _) => FinanceFullTableScreen(
+          controller: _controller,
+          canReverse: canReverse,
+        ),
         transitionsBuilder: (_, a, _, child) =>
             FadeTransition(opacity: a, child: child),
         transitionDuration: const Duration(milliseconds: 250),
@@ -60,147 +69,167 @@ class _FinanceScreenState extends State<FinanceScreen> {
                     ],
                   ),
                   Expanded(
-                    child: ListView(
-                      padding: EdgeInsets.fromLTRB(16, 14, 16, navPad + 76),
-                      children: [
-                        Row(
+                    child: NzAsyncBody(
+                      // Rows stay on screen after the first load, even if a reload fails.
+                      hasValue:
+                          !c.isLoading &&
+                          (c.error == null || c.rows.isNotEmpty),
+                      error: c.error,
+                      onRetry: c.load,
+                      child: () => RefreshIndicator(
+                        onRefresh: c.load,
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(16, 14, 16, navPad + 76),
                           children: [
-                            Expanded(
-                              child: _TotalCard(
-                                icon: LucideIcons.trendingUp,
-                                iconColor: AppColors.goldDeep,
-                                label: 'الإيرادات',
-                                usd: totals.incomeUsd,
-                                iqd: totals.incomeIqd,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: _TotalCard(
-                                icon: LucideIcons.trendingDown,
-                                iconColor: AppColors.inkMuted,
-                                label: 'المصروفات',
-                                usd: totals.expenseUsd,
-                                iqd: totals.expenseIqd,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        NzCard(
-                          color: AppColors.ink,
-                          borderColor: null,
-                          radius: 18,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'الصافي',
-                                  style: AppText.body(
-                                    13,
-                                    color: AppColors.onInkMuted,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _TotalCard(
+                                    icon: LucideIcons.trendingUp,
+                                    iconColor: AppColors.goldDeep,
+                                    label: 'الإيرادات',
+                                    usd: totals.incomeUsd,
+                                    iqd: totals.incomeIqd,
                                   ),
                                 ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: _TotalCard(
+                                    icon: LucideIcons.trendingDown,
+                                    iconColor: AppColors.inkMuted,
+                                    label: 'المصروفات',
+                                    usd: totals.expenseUsd,
+                                    iqd: totals.expenseIqd,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            NzCard(
+                              color: AppColors.ink,
+                              borderColor: null,
+                              radius: 18,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
                               ),
-                              NzAmount(
-                                totals.netUsd,
-                                'دولار',
-                                size: 22,
-                                color: AppColors.onInk,
-                                unitColor: AppColors.onInkMuted,
-                              ),
-                              const SizedBox(width: 12),
-                              NzAmount(
-                                totals.netIqd,
-                                'دينار',
-                                size: 16,
-                                color: AppColors.goldLight,
-                                unitColor: AppColors.onInkMuted,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        FinanceToolbar(
-                          controller: c,
-                          onFilter: () => showFinanceFilter(context, c),
-                        ),
-                        if (c.activeFilters.isNotEmpty) ...[
-                          const SizedBox(height: 10),
-                          _ActiveChips(controller: c),
-                        ],
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text.rich(
-                                TextSpan(
-                                  children: [
-                                    const TextSpan(text: 'الحركات '),
-                                    TextSpan(
-                                      text: '${c.rows.length}',
-                                      style: AppText.num(
-                                        12.5,
-                                        weight: FontWeight.w500,
-                                        color: AppColors.inkMuted,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      'الصافي',
+                                      style: AppText.body(
+                                        13,
+                                        color: AppColors.onInkMuted,
                                       ),
                                     ),
-                                  ],
+                                  ),
+                                  NzAmount(
+                                    totals.netUsd,
+                                    'دولار',
+                                    size: 22,
+                                    color: AppColors.onInk,
+                                    unitColor: AppColors.onInkMuted,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  NzAmount(
+                                    totals.netIqd,
+                                    'دينار',
+                                    size: 16,
+                                    color: AppColors.goldLight,
+                                    unitColor: AppColors.onInkMuted,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            FinanceToolbar(
+                              controller: c,
+                              onFilter: () => showFinanceFilter(context, c),
+                            ),
+                            if (c.activeFilters.isNotEmpty) ...[
+                              const SizedBox(height: 10),
+                              _ActiveChips(controller: c),
+                            ],
+                            const SizedBox(height: 14),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        const TextSpan(text: 'الحركات '),
+                                        TextSpan(
+                                          text: '${c.rows.length}',
+                                          style: AppText.num(
+                                            12.5,
+                                            weight: FontWeight.w500,
+                                            color: AppColors.inkMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    style: AppText.display(16, height: 1.4),
+                                  ),
                                 ),
-                                style: AppText.display(16, height: 1.4),
+                                NzOutlineButton(
+                                  label: 'تكبير',
+                                  icon: LucideIcons.maximize2,
+                                  height: 40,
+                                  radius: 12,
+                                  fontSize: 13,
+                                  onPressed: _expand,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            TransactionsTable(
+                              groups: c.groups,
+                              onOpen: (t) => showTransactionDetail(
+                                context,
+                                c,
+                                t,
+                                canReverse: ref
+                                    .watch(canProvider)
+                                    .can(Permissions.financeCreate),
                               ),
                             ),
-                            NzOutlineButton(
-                              label: 'تكبير',
-                              icon: LucideIcons.maximize2,
-                              height: 40,
-                              radius: 12,
-                              fontSize: 13,
-                              onPressed: _expand,
+                            const SizedBox(height: 14),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  LucideIcons.info,
+                                  size: 13,
+                                  color: AppColors.inkFaint,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'لا سعر صرف — كل عملة تُحسب على حدة.',
+                                  style: AppText.body(
+                                    12,
+                                    color: AppColors.inkFaint,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 10),
-                        TransactionsTable(
-                          groups: c.groups,
-                          onOpen: (t) => showTransactionDetail(context, c, t),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              LucideIcons.info,
-                              size: 13,
-                              color: AppColors.inkFaint,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'لا سعر صرف — كل عملة تُحسب على حدة.',
-                              style: AppText.body(
-                                12,
-                                color: AppColors.inkFaint,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 ],
               ),
-              PositionedDirectional(
-                end: 16,
-                bottom: NzBottomNav.fabBottom(context),
-                child: NzFloatingButton(
-                  label: 'حركة جديدة',
-                  onPressed: () => showNewTransaction(context, c),
+              if (ref.watch(canProvider).can(Permissions.financeCreate))
+                PositionedDirectional(
+                  end: 16,
+                  bottom: NzBottomNav.fabBottom(context),
+                  child: NzFloatingButton(
+                    label: 'حركة جديدة',
+                    onPressed: () => showNewTransaction(context, c),
+                  ),
                 ),
-              ),
             ],
           ),
         );
