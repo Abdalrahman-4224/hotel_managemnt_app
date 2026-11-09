@@ -214,10 +214,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
   bool _canDoMainAction(Permissions can, BookingStatus status) =>
       switch (status) {
         BookingStatus.confirmed ||
-        BookingStatus.upcoming ||
-        BookingStatus.staying => can.can(Permissions.bookingCheckIn),
-        // Viewing the invoice only needs read access, which this screen already has.
-        BookingStatus.departed => true,
+        BookingStatus.upcoming => can.can(Permissions.bookingCheckIn),
+        // Check-out is its own code, so a role can check guests in but not out.
+        BookingStatus.staying => can.can(Permissions.bookingCheckOut),
+        BookingStatus.departed => can.can(Permissions.financeInvoice),
         BookingStatus.cancelled => false,
       };
 

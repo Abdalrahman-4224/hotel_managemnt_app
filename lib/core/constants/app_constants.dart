@@ -1,19 +1,24 @@
-import 'dart:io';
-
 class AppConstants {
   const AppConstants._();
 
   static const appName = 'Hotel Management';
 
-  // Android emulator: 10.0.2.2 = your computer's localhost.
-  // iOS simulator: shares the Mac's network, so localhost works.
-  // Real phone: use your computer's IP, e.g. http://192.168.1.5:3000/api
-  static String get baseUrl {
-    if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api';
-    }
-    return 'http://localhost:3000/api';
-  }
+  /// The shared team server. The backend and the database both live there, so
+  /// nothing needs to run on your machine to use the app.
+  static const teamServer = 'https://api.funduqiplus.com/api';
+
+  /// Where the app sends its requests.
+  ///
+  /// To point it at a backend running on your own machine instead:
+  ///   flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000/api
+  ///
+  /// 10.0.2.2 is the Android emulator's address for your computer's localhost.
+  /// On the iOS simulator use http://localhost:3000/api; on a real phone use
+  /// your computer's IP, e.g. http://192.168.1.5:3000/api.
+  static const baseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: teamServer,
+  );
 
   static const connectTimeout = Duration(seconds: 15);
   static const receiveTimeout = Duration(seconds: 20);

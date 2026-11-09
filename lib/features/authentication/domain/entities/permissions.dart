@@ -23,6 +23,7 @@ class Permissions {
   static const bookingUpdate = 'BOOKING_UPDATE';
   static const bookingDelete = 'BOOKING_DELETE';
   static const bookingCheckIn = 'BOOKING_CHECKIN';
+  static const bookingCheckOut = 'BOOKING_CHECKOUT';
   static const bookingCancel = 'BOOKING_CANCEL';
 
   // Campaigns (group bookings)
@@ -47,6 +48,9 @@ class Permissions {
   static const inventoryView = 'INVENTORY_VIEW';
   static const inventoryCreate = 'INVENTORY_CREATE';
   static const inventoryUpdate = 'INVENTORY_UPDATE';
+
+  /// Issuing stock against a task (task-consumptions).
+  static const inventoryIssue = 'INVENTORY_ISSUE';
   static const inventoryDelete = 'INVENTORY_DELETE';
 
   // Money
@@ -54,6 +58,8 @@ class Permissions {
   static const financeCreate = 'FINANCE_CREATE';
   static const financeUpdate = 'FINANCE_UPDATE';
   static const financeDelete = 'FINANCE_DELETE';
+  static const financeInvoice = 'FINANCE_INVOICE';
+  static const financeReports = 'FINANCE_REPORTS';
 
   // Everything else
   static const dashboardView = 'DASHBOARD_VIEW';
