@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 import 'nz_buttons.dart';
+import '../theme/app_sizes.dart';
 
 /// Top header shared by every screen: optional leading widget,
 /// a muted subtitle above a serif title, trailing actions, and an
@@ -19,7 +20,7 @@ class NzPageHeader extends StatelessWidget {
     this.showBack = false,
     this.onBack,
     this.background = AppColors.paper,
-    this.bottomGap = 12,
+    this._bottomGap,
     this.bottomBleeds = false,
   });
 
@@ -33,7 +34,8 @@ class NzPageHeader extends StatelessWidget {
   final bool showBack;
   final VoidCallback? onBack;
   final Color background;
-  final double bottomGap;
+  final double? _bottomGap;
+  double get bottomGap => _bottomGap ?? AppSpacing.s12;
 
   /// Lets [bottom] run edge to edge (for horizontal pill scrollers that
   /// add their own 16px inset).
@@ -47,13 +49,16 @@ class NzPageHeader extends StatelessWidget {
         color: background,
         border: const Border(bottom: BorderSide(color: AppColors.line)),
       ),
-      padding: EdgeInsets.only(top: top + 10, bottom: 12),
+      padding: EdgeInsets.only(
+        top: top + AppSpacing.s10,
+        bottom: AppSpacing.s12,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.s16),
             child: Row(
               children: [
                 if (showBack) ...[
@@ -62,9 +67,12 @@ class NzPageHeader extends StatelessWidget {
                     tooltip: 'رجوع',
                     onPressed: onBack ?? () => Navigator.of(context).maybePop(),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: AppSpacing.s10),
                 ],
-                if (leading != null) ...[leading!, const SizedBox(width: 12)],
+                if (leading != null) ...[
+                  leading!,
+                  SizedBox(width: AppSpacing.s12),
+                ],
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -77,19 +85,24 @@ class NzPageHeader extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: AppText.body(12.5, color: AppColors.inkMuted),
                         ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: AppSpacing.s2),
                       Text(title, style: AppText.display(22)),
                     ],
                   ),
                 ),
-                for (final a in actions) ...[const SizedBox(width: 10), a],
+                for (final a in actions) ...[
+                  SizedBox(width: AppSpacing.s10),
+                  a,
+                ],
               ],
             ),
           ),
           if (bottom != null) ...[
             SizedBox(height: bottomGap),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: bottomBleeds ? 0 : 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: bottomBleeds ? 0 : AppSpacing.s16,
+              ),
               child: bottom!,
             ),
           ],
@@ -144,7 +157,7 @@ class NzGroupLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.s4),
       child: Text(
         label,
         style: AppText.body(

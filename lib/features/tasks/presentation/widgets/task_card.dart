@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -55,20 +56,20 @@ class TaskCard extends StatelessWidget {
     return Opacity(
       opacity: done ? .78 : 1,
       child: NzCard(
-        radius: 20,
+        radius: AppRadius.r20,
         shadow: AppShadows.card,
         borderColor: t.urgent && !done
             ? const Color(0x73B68235)
             : AppColors.line,
-        padding: const EdgeInsets.all(14),
+        padding: EdgeInsets.all(AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                NzIconTile(t.type.icon, iconSize: 19),
-                const SizedBox(width: 12),
+                NzIconTile(t.type.icon, iconSize: 19.r),
+                SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,17 +81,17 @@ class TaskCard extends StatelessWidget {
                             style: AppText.body(12, color: AppColors.inkMuted),
                           ),
                           if (t.urgent) ...[
-                            const SizedBox(width: 6),
-                            const NzTag(
+                            SizedBox(width: AppSpacing.s6),
+                            NzTag(
                               'عاجلة',
                               tone: NzTagTone.dark,
-                              height: 20,
+                              height: 20.r,
                               fontSize: 11,
                             ),
                           ],
                         ],
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.s4),
                       Text(
                         t.title,
                         style: AppText.body(
@@ -99,33 +100,33 @@ class TaskCard extends StatelessWidget {
                           height: 1.45,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: AppSpacing.s4),
                       Wrap(
-                        spacing: 12,
-                        runSpacing: 4,
+                        spacing: AppSpacing.s12,
+                        runSpacing: AppSpacing.s4,
                         children: [
                           if (t.location.isNotEmpty)
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
+                                Icon(
                                   LucideIcons.mapPin,
-                                  size: 13,
+                                  size: 13.r,
                                   color: AppColors.inkMuted,
                                 ),
-                                const SizedBox(width: 4),
+                                SizedBox(width: AppSpacing.s4),
                                 Text(t.location, style: meta),
                               ],
                             ),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
+                              Icon(
                                 LucideIcons.clock,
-                                size: 13,
+                                size: 13.r,
                                 color: AppColors.inkMuted,
                               ),
-                              const SizedBox(width: 4),
+                              SizedBox(width: AppSpacing.s4),
                               Text(
                                 t.at,
                                 style: AppText.num(
@@ -141,18 +142,18 @@ class TaskCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: AppSpacing.s12),
                 TaskStatusTag(t.status),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: AppSpacing.s12),
             const NzDivider(),
-            const SizedBox(height: 10),
+            SizedBox(height: AppSpacing.s10),
             Row(
               children: [
                 Container(
-                  width: 26,
-                  height: 26,
+                  width: 26.r,
+                  height: 26.r,
                   decoration: const BoxDecoration(
                     color: AppColors.inert,
                     shape: BoxShape.circle,
@@ -168,7 +169,7 @@ class TaskCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: Text(
                     personLine,
@@ -179,15 +180,15 @@ class TaskCard extends StatelessWidget {
                   actionPrimary
                       ? NzPrimaryButton(
                           label: actionLabel!,
-                          height: 40,
-                          radius: 12,
+                          height: 40.r,
+                          radius: AppRadius.r12,
                           fontSize: 13.5,
                           onPressed: onAction,
                         )
                       : NzOutlineButton(
                           label: actionLabel!,
-                          height: 40,
-                          radius: 12,
+                          height: 40.r,
+                          radius: AppRadius.r12,
                           fontSize: 13.5,
                           weight: FontWeight.w600,
                           onPressed: onAction,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -96,13 +97,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 showBack: Navigator.of(context).canPop(),
                 leading: NzInitialAvatar(
                   myName.isEmpty ? '؟' : myName.substring(0, 1),
-                  size: 42,
+                  size: 42.r,
                   fontSize: 16,
                   dark: true,
                 ),
                 subtitle: '$myName · ${me?.roleName ?? ''}',
                 title: 'المهام',
-                bottomGap: 14,
+                bottomGap: AppSpacing.s14,
                 bottom: NzSegmented<_Box>(
                   selected: _box,
                   countAsBadge: true,
@@ -136,8 +137,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.only(
-                        top: 14,
-                        bottom: NzBottomNav.bodyPadding(context) + 76,
+                        top: AppSpacing.s14,
+                        bottom: NzBottomNav.bodyPadding(context) + 76.r,
                       ),
                       children: [
                         NzPillScroller(
@@ -156,12 +157,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                           ],
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.s16,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (shown.isEmpty) ...[
-                                const SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.s12),
                                 NzDashedBox(
                                   child: Text(
                                     'لا مهام هنا.',
@@ -174,7 +177,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                                 ),
                               ],
                               for (final t in shown) ...[
-                                const SizedBox(height: 12),
+                                SizedBox(height: AppSpacing.s12),
                                 _card(t),
                               ],
                             ],
@@ -189,7 +192,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
           if (can.can(Permissions.taskCreate))
             PositionedDirectional(
-              end: 16,
+              end: AppSpacing.s16,
               bottom: NzBottomNav.fabBottom(context),
               child: NzFloatingButton(
                 label: 'مهمة جديدة',

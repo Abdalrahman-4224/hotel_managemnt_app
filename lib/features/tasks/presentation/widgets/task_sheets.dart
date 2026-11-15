@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -11,17 +12,22 @@ import '../../domain/entities/task_item.dart';
 Future<bool?> showCompleteTaskSheet(BuildContext context, TaskItem t) {
   return showNzSheet<bool>(
     context,
-    padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),
+    padding: EdgeInsets.fromLTRB(
+      AppSpacing.s18,
+      AppSpacing.s10,
+      AppSpacing.s18,
+      AppSpacing.s32,
+    ),
     builder: (ctx) => Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const NzSheetTitle('إتمام المهمة'),
-        const SizedBox(height: 14),
+        SizedBox(height: AppSpacing.s14),
         Text(
           t.location.isEmpty ? t.title : '${t.title} · ${t.location}',
           style: AppText.body(14, color: AppColors.inkMuted),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: AppSpacing.s14),
         NzPrimaryButton(
           label: 'تأكيد الإتمام',
           onPressed: () => Navigator.of(ctx).pop(true),
@@ -97,10 +103,10 @@ Future<NewTask?> showNewTaskSheet(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _Label('نوع المهمة'),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.s8),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.s8,
+            runSpacing: AppSpacing.s8,
             children: [
               for (final t in TaskType.values)
                 NzChoicePill(
@@ -110,7 +116,7 @@ Future<NewTask?> showNewTaskSheet(
                 ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           NzTextField(
             label: 'عنوان المهمة',
             hint: 'تسريب ماء في الحمّام',
@@ -122,23 +128,23 @@ Future<NewTask?> showNewTaskSheet(
             },
           ),
           if (d.error == 'title') ...[
-            const SizedBox(height: 7),
+            SizedBox(height: 7.r),
             const _Error('اكتب عنواناً للمهمة.'),
           ],
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           const _Label('الغرفة (اختياري)'),
-          const SizedBox(height: 7),
+          SizedBox(height: 7.r),
           _RoomPicker(draft: d, floors: floors),
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           NzTextField(
             label: 'التفاصيل (اختياري)',
             controller: d.details,
-            height: 80,
+            height: 80.r,
             maxLines: 4,
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           const _Label('الأولوية'),
-          const SizedBox(height: 7),
+          SizedBox(height: 7.r),
           NzSegmented<bool>(
             selected: d.urgent,
             onChanged: (v) => d.update(() => d.urgent = v),
@@ -147,10 +153,10 @@ Future<NewTask?> showNewTaskSheet(
               NzSegment(true, 'عاجلة'),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           const _Label('إرسال إلى'),
           for (final person in people) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: AppSpacing.s8),
             _PersonOption(
               person: person,
               selected: d.to?.id == person.id,
@@ -161,7 +167,7 @@ Future<NewTask?> showNewTaskSheet(
             ),
           ],
           if (d.error == 'to') ...[
-            const SizedBox(height: 8),
+            SizedBox(height: AppSpacing.s8),
             const _Error('اختر الشخص الذي تُرسل إليه المهمة.'),
           ],
         ],
@@ -172,11 +178,11 @@ Future<NewTask?> showNewTaskSheet(
         Expanded(
           child: NzOutlineButton(
             label: 'إلغاء',
-            height: 54,
+            height: 54.r,
             onPressed: () => Navigator.of(ctx).pop(),
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: AppSpacing.s10),
         Expanded(
           flex: 2,
           child: NzPrimaryButton(
@@ -209,21 +215,21 @@ class _RoomPicker extends StatelessWidget {
         GestureDetector(
           onTap: () => d.update(() => d.mapOpen = !d.mapOpen),
           child: Container(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            height: 52.r,
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.s14),
             decoration: BoxDecoration(
               color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.r16),
               border: Border.all(color: AppColors.lineStrong),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   LucideIcons.grid2x2,
-                  size: 18,
+                  size: 18.r,
                   color: AppColors.goldDeep,
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
                 Expanded(
                   child: Text(
                     d.room == null
@@ -235,9 +241,9 @@ class _RoomPicker extends StatelessWidget {
                 AnimatedRotation(
                   turns: d.mapOpen ? .5 : 0,
                   duration: const Duration(milliseconds: 200),
-                  child: const Icon(
+                  child: Icon(
                     LucideIcons.chevronDown,
-                    size: 16,
+                    size: 16.r,
                     color: AppColors.inkFaint,
                   ),
                 ),
@@ -246,23 +252,23 @@ class _RoomPicker extends StatelessWidget {
           ),
         ),
         if (d.mapOpen) ...[
-          const SizedBox(height: 7),
+          SizedBox(height: 7.r),
           NzCard(
-                radius: 18,
-                padding: const EdgeInsets.all(12),
+                radius: AppRadius.r18,
+                padding: EdgeInsets.all(AppSpacing.s12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (final (i, floor) in floors.indexed) ...[
-                      if (i > 0) const SizedBox(height: 10),
+                      if (i > 0) SizedBox(height: AppSpacing.s10),
                       Text(
                         floor.name,
                         style: AppText.body(12.5, color: AppColors.inkMuted),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: AppSpacing.s6),
                       NzGrid(
                         columns: 6,
-                        spacing: 6,
+                        spacing: AppSpacing.s6,
                         children: [
                           for (final room in floor.rooms)
                             _RoomChip(
@@ -324,10 +330,10 @@ class _RoomChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 40,
+        height: 40.r,
         decoration: BoxDecoration(
           color: selected ? AppColors.goldTint : AppColors.paper,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppRadius.r10),
           border: Border.all(
             color: selected ? AppColors.goldDeep : const Color(0x1A1C1B19),
             width: selected ? 1.5 : 1,
@@ -363,12 +369,15 @@ class _PersonOption extends StatelessWidget {
     return NzOptionTile(
       selected: selected,
       onTap: onTap,
-      minHeight: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      minHeight: 60.r,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s10,
+      ),
       child: Row(
         children: [
-          NzInitialAvatar(person.initial, size: 36),
-          const SizedBox(width: 12),
+          NzInitialAvatar(person.initial, size: 36.r),
+          SizedBox(width: AppSpacing.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

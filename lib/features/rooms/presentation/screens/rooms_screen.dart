@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -53,7 +54,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                 ],
                 bottomBleeds: true,
                 bottom: Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
+                  padding: EdgeInsets.only(bottom: AppSpacing.s2),
                   child: NzPillScroller(
                     children: [
                       for (final (i, f) in floors.indexed)
@@ -72,7 +73,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
           ),
           if (ref.watch(canProvider).can(Permissions.bookingCreate))
             PositionedDirectional(
-              end: 16,
+              end: AppSpacing.s16,
               bottom: NzBottomNav.fabBottom(context),
               child: NzFloatingButton(
                 label: 'حجز جديد',
@@ -92,7 +93,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
           text: _errorText(async.error),
           action: NzPrimaryButton(
             label: 'إعادة المحاولة',
-            height: 48,
+            height: 48.r,
             onPressed: () =>
                 ref.read(floorsControllerProvider.notifier).refresh(),
           ),
@@ -116,8 +117,8 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(
-          top: 14,
-          bottom: NzBottomNav.bodyPadding(context) + 72,
+          top: AppSpacing.s14,
+          bottom: NzBottomNav.bodyPadding(context) + 72.r,
         ),
         children: [
           NzPillScroller(
@@ -133,14 +134,14 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.s16),
             child: list.isEmpty
                 ? NzDashedBox(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 32,
-                      horizontal: 12,
+                    padding: EdgeInsets.symmetric(
+                      vertical: AppSpacing.s32,
+                      horizontal: AppSpacing.s12,
                     ),
                     child: Text(
                       floor.rooms.isEmpty
@@ -183,8 +184,13 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
     final canSetStatus = ref.read(canProvider).can(Permissions.roomUpdate);
     showNzSheet<void>(
       context,
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),
-      gap: 16,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.s18,
+        AppSpacing.s10,
+        AppSpacing.s18,
+        AppSpacing.s32,
+      ),
+      gap: AppSpacing.s16,
       // Consumer: rebuild the sheet when the room's status changes.
       builder: (ctx) => Consumer(
         builder: (ctx, ref, _) {
@@ -206,7 +212,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                   RoomStatusTag(st),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: AppSpacing.s16),
               NzGrid(
                 columns: 2,
                 children: [
@@ -215,16 +221,16 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                   _Fact('الطابق', floorName),
                 ],
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: AppSpacing.s16),
               if (st == RoomStatus.busy)
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSpacing.s14,
+                    vertical: AppSpacing.s12,
                   ),
                   decoration: BoxDecoration(
                     color: AppColors.goldTint,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadius.r14),
                     border: Border.all(color: AppColors.goldBorderSoft),
                   ),
                   child: Text(
@@ -246,7 +252,7 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                   'حالة الغرفة',
                   style: AppText.body(13, color: AppColors.inkMuted),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppSpacing.s8),
                 Row(
                   children: [
                     for (final (i, o) in const [
@@ -254,13 +260,13 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                       RoomStatus.held,
                       RoomStatus.maintenance,
                     ].indexed) ...[
-                      if (i > 0) const SizedBox(width: 8),
+                      if (i > 0) SizedBox(width: AppSpacing.s8),
                       Expanded(
                         child: NzChoicePill(
                           label: o.label,
                           selected: st == o,
-                          height: 48,
-                          radius: 14,
+                          height: 48.r,
+                          radius: AppRadius.r14,
                           fontSize: 14.5,
                           offColor: AppColors.ink,
                           onTap: () => _changeStatus(room, o),
@@ -269,16 +275,16 @@ class _RoomsScreenState extends ConsumerState<RoomsScreen> {
                     ],
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppSpacing.s8),
                 Text(
                   'الحالة الافتراضية لأي غرفة: متاحة.',
                   style: AppText.body(12.5, color: AppColors.inkFaint),
                 ),
               ],
-              const SizedBox(height: 16),
+              SizedBox(height: AppSpacing.s16),
               NzPrimaryButton(
                 label: 'تم',
-                height: 52,
+                height: 52.r,
                 weight: FontWeight.w500,
                 onPressed: () => Navigator.of(ctx).pop(),
               ),
@@ -301,7 +307,7 @@ class _Message extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.s24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -310,7 +316,7 @@ class _Message extends StatelessWidget {
               textAlign: TextAlign.center,
               style: AppText.body(14.5, color: AppColors.inkMuted),
             ),
-            if (action != null) ...[const SizedBox(height: 16), action!],
+            if (action != null) ...[SizedBox(height: AppSpacing.s16), action!],
           ],
         ),
       ),
@@ -327,13 +333,16 @@ class _Fact extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 14,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      radius: AppRadius.r14,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s10,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppText.body(12, color: AppColors.inkMuted)),
-          const SizedBox(height: 3),
+          SizedBox(height: AppSpacing.s3),
           Text(value, style: AppText.body(14.5, weight: FontWeight.w500)),
         ],
       ),

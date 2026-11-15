@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../core/errors/app_exception.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
 import 'nz_buttons.dart';
+import '../theme/app_sizes.dart';
 
 /// Centered text for an empty list or a failed first load, with an optional retry button.
 class NzStateMessage extends StatelessWidget {
@@ -20,7 +22,7 @@ class NzStateMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(AppSpacing.s24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -30,10 +32,10 @@ class NzStateMessage extends StatelessWidget {
               style: AppText.body(14.5, color: AppColors.inkMuted),
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: 16),
+              SizedBox(height: AppSpacing.s16),
               NzPrimaryButton(
                 label: 'إعادة المحاولة',
-                height: 48,
+                height: 48.r,
                 onPressed: onRetry!,
               ),
             ],

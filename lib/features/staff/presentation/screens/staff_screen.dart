@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/utils/formatters.dart';
@@ -60,9 +61,9 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: EdgeInsets.fromLTRB(
-                      16,
-                      14,
-                      16,
+                      AppSpacing.s16,
+                      AppSpacing.s14,
+                      AppSpacing.s16,
                       NzBottomNav.bodyPadding(context),
                     ),
                     children: p == null ? _list() : [_detail(p)],
@@ -89,14 +90,14 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
               '${_staff.where((s) => s.online).length}',
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: AppSpacing.s8),
           Expanded(
             child: _Stat(
               'حجوزات',
               fmtNum(_staff.fold<int>(0, (n, s) => n + s.bookings)),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: AppSpacing.s8),
           Expanded(
             child: _Stat(
               'مهام مفتوحة',
@@ -105,13 +106,13 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
           ),
         ],
       ),
-      const SizedBox(height: 14),
+      SizedBox(height: AppSpacing.s14),
       Row(
         children: [
           Expanded(
             child: NzSegmented<bool>(
               selected: _onlineOnly,
-              height: 42,
+              height: 42.r,
               fontSize: 14,
               onChanged: (v) => setState(() => _onlineOnly = v),
               segments: [
@@ -124,18 +125,18 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: AppSpacing.s8),
           Semantics(
             button: true,
             label: 'القسم: ${_department ?? 'كل الأقسام'}',
             child: GestureDetector(
               onTap: _openDepartments,
               child: Container(
-                height: 50,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                height: 50.r,
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                 decoration: BoxDecoration(
                   color: deptOn ? AppColors.goldTint : AppColors.card,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppRadius.r16),
                   border: Border.all(
                     color: deptOn ? AppColors.goldDeep : AppColors.lineStrong,
                     width: deptOn ? 1.5 : 1,
@@ -145,7 +146,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 88),
+                      constraints: BoxConstraints(maxWidth: 88.r),
                       child: Text(
                         _department ?? 'كل الأقسام',
                         maxLines: 1,
@@ -157,10 +158,10 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: AppSpacing.s6),
                     Icon(
                       LucideIcons.chevronDown,
-                      size: 15,
+                      size: 15.r,
                       color: deptOn ? AppColors.goldDarkest : AppColors.ink,
                     ),
                   ],
@@ -170,10 +171,13 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
           ),
         ],
       ),
-      const SizedBox(height: 14),
+      SizedBox(height: AppSpacing.s14),
       if (list.isEmpty)
         NzDashedBox(
-          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 12),
+          padding: EdgeInsets.symmetric(
+            vertical: 30.r,
+            horizontal: AppSpacing.s12,
+          ),
           child: Text(
             'لا موظفين بهذا الفلتر.',
             textAlign: TextAlign.center,
@@ -197,13 +201,13 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
             NzCard(
               color: AppColors.ink,
               borderColor: null,
-              radius: 22,
-              padding: const EdgeInsets.all(16),
+              radius: AppRadius.r22,
+              padding: EdgeInsets.all(AppSpacing.s16),
               child: Row(
                 children: [
                   Container(
-                    width: 54,
-                    height: 54,
+                    width: 54.r,
+                    height: 54.r,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: const Color(0x29E3B06A),
@@ -219,7 +223,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  SizedBox(width: AppSpacing.s14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,13 +244,13 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                     ),
                   ),
                   Container(
-                    height: 28,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    height: 28.r,
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                     decoration: BoxDecoration(
                       color: p.online
                           ? const Color(0x2EE3B06A)
                           : const Color(0x1AF8F5F1),
-                      borderRadius: BorderRadius.circular(99),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
                     ),
                     alignment: Alignment.center,
                     child: Text(
@@ -263,19 +267,19 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             Row(
               children: [
                 Expanded(
                   child: _Stat('حجوزات اليوم', fmtNum(p.bookings), big: false),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: _Stat('مهام مفتوحة', fmtNum(p.tasks), big: false),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: AppSpacing.s8),
             Row(
               children: [
                 Expanded(
@@ -285,7 +289,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                     big: false,
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: _Stat(
                     'مبالغ · دينار',
@@ -295,7 +299,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             Row(
               children: [
                 Expanded(
@@ -310,7 +314,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             ActivityTable(items: acts),
           ],
         )
@@ -324,15 +328,20 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
     final options = <String?>[null, ...departments];
     showNzSheet<void>(
       context,
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),
-      gap: 12,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.s18,
+        AppSpacing.s10,
+        AppSpacing.s18,
+        AppSpacing.s32,
+      ),
+      gap: AppSpacing.s12,
       builder: (ctx) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const NzSheetTitle('القسم'),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           for (final (i, d) in options.indexed) ...[
-            if (i > 0) const SizedBox(height: 8),
+            if (i > 0) SizedBox(height: AppSpacing.s8),
             NzRadioRow(
               label: d ?? 'كل الأقسام',
               trailing:
@@ -360,10 +369,13 @@ class _Stat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 16,
+      radius: AppRadius.r16,
       padding: big
-          ? const EdgeInsets.all(12)
-          : const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ? EdgeInsets.all(AppSpacing.s12)
+          : EdgeInsets.symmetric(
+              horizontal: AppSpacing.s14,
+              vertical: AppSpacing.s12,
+            ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -375,7 +387,7 @@ class _Stat extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: AppSpacing.s6),
           Text(value, style: AppText.num(big ? 22 : 20, height: 1)),
         ],
       ),

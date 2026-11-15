@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/errors/app_exception.dart';
@@ -100,7 +101,7 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                   showBack: true,
                   subtitle: 'الخطوة 1 من 2 · اختيار الغرف',
                   title: 'إضافة حجز',
-                  bottomGap: 14,
+                  bottomGap: AppSpacing.s14,
                   bottom: NzSegmented<bool>(
                     selected: c.isGroup,
                     onChanged: c.setGroup,
@@ -112,7 +113,10 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                 ),
                 Expanded(
                   child: ListView(
-                    padding: EdgeInsets.only(top: 14, bottom: 120 + bottom),
+                    padding: EdgeInsets.only(
+                      top: AppSpacing.s14,
+                      bottom: 120.r + bottom,
+                    ),
                     children: [
                       NzPillScroller(
                         children: [
@@ -125,9 +129,11 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                             ),
                         ],
                       ),
-                      const SizedBox(height: 14),
+                      SizedBox(height: AppSpacing.s14),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.s16,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -141,7 +147,7 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
                                 height: 1.6,
                               ),
                             ),
-                            const SizedBox(height: 14),
+                            SizedBox(height: AppSpacing.s14),
                             NzGrid(
                               children: [
                                 for (final r in c.floors[c.floor].rooms)
@@ -161,9 +167,9 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
               ],
             ),
             Positioned(
-              left: 12,
-              right: 12,
-              bottom: 24 + bottom,
+              left: AppSpacing.s12,
+              right: AppSpacing.s12,
+              bottom: AppSpacing.s24 + bottom,
               child: _SelectionBar(
                 controller: c,
                 busy: _holding,
@@ -207,15 +213,18 @@ class _PickTile extends StatelessWidget {
           opacity: free || selected ? 1 : .55,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
-            constraints: const BoxConstraints(minHeight: 76),
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            constraints: BoxConstraints(minHeight: 76.r),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.s4,
+              vertical: AppSpacing.s8,
+            ),
             decoration: BoxDecoration(
               color: selected
                   ? AppColors.goldTint
                   : free
                   ? AppColors.card
                   : AppColors.inert,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.r16),
               border: Border.all(
                 color: selected
                     ? AppColors.goldDeep
@@ -234,7 +243,7 @@ class _PickTile extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(room.number, style: AppText.num(17, color: fg, height: 1)),
-                const SizedBox(height: 6),
+                SizedBox(height: AppSpacing.s6),
                 Text(
                   free ? room.typeName : room.status.label,
                   maxLines: 1,
@@ -271,10 +280,15 @@ class _SelectionBar extends StatelessWidget {
     final n = controller.selected.length;
     final enabled = n > 0 && !busy;
     return Container(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 12, 12),
+          padding: EdgeInsetsDirectional.fromSTEB(
+            AppSpacing.s16,
+            AppSpacing.s12,
+            AppSpacing.s12,
+            AppSpacing.s12,
+          ),
           decoration: BoxDecoration(
             color: AppColors.ink,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(AppRadius.r22),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x4D1C1B19),
@@ -320,16 +334,16 @@ class _SelectionBar extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: AppSpacing.s12),
               GestureDetector(
                 onTap: enabled ? onNext : null,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  height: 48,
-                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  height: 48.r,
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.s18),
                   decoration: BoxDecoration(
                     color: enabled ? Colors.white : const Color(0x1FFFFFFF),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppRadius.r14),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -344,10 +358,10 @@ class _SelectionBar extends StatelessWidget {
                               : const Color(0x66F8F5F1),
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      SizedBox(width: AppSpacing.s6),
                       Icon(
                         LucideIcons.chevronLeft,
-                        size: 17,
+                        size: 17.r,
                         color: enabled
                             ? AppColors.ink
                             : const Color(0x66F8F5F1),

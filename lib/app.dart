@@ -40,6 +40,10 @@ class _AppState extends ConsumerState<App> {
     return ScreenUtilInit(
       designSize: const Size(390, 844),
       minTextAdapt: true,
+      // On Android the first frame can arrive before the window has a size.
+      // ScreenUtil then scales everything to 0, and const widgets built in
+      // that frame keep their 0 widths for good. Wait for a real size first.
+      ensureScreenSize: true,
       builder: (context, child) => MaterialApp.router(
         title: 'Hotel Management',
         theme: AppTheme.light,

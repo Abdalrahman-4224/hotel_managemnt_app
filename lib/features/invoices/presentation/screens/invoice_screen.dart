@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -80,16 +81,21 @@ class _InvoiceView extends StatelessWidget {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.s16,
+                AppSpacing.s16,
+                AppSpacing.s16,
+                AppSpacing.s24,
+              ),
               children: [InvoicePaper(invoice: invoice)],
             ),
           ),
           Container(
             padding: EdgeInsets.fromLTRB(
-              16,
-              12,
-              16,
-              30 + MediaQuery.paddingOf(context).bottom,
+              AppSpacing.s16,
+              AppSpacing.s12,
+              AppSpacing.s16,
+              30.r + MediaQuery.paddingOf(context).bottom,
             ),
             decoration: const BoxDecoration(
               color: AppColors.paper,
@@ -100,11 +106,11 @@ class _InvoiceView extends StatelessWidget {
                 Expanded(
                   child: NzOutlineButton(
                     label: 'مشاركة',
-                    height: 54,
+                    height: 54.r,
                     onPressed: share,
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
                 Expanded(
                   flex: 2,
                   child: NzPrimaryButton(
@@ -126,27 +132,32 @@ class _InvoiceView extends StatelessWidget {
     const copies = ['نسخة النزيل', 'نسخة الفندق', 'النسختان'];
     final printed = await showNzSheet<bool>(
       context,
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.s18,
+        AppSpacing.s10,
+        AppSpacing.s18,
+        AppSpacing.s32,
+      ),
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setSheet) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const NzSheetTitle('طباعة الفاتورة'),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             Text(
               'تُطبع بعملتها الأصلية مع سجل الدفعات وتوقيع الموظف.',
               style: AppText.body(13.5, color: AppColors.inkMuted, height: 1.6),
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             for (final (i, label) in copies.indexed) ...[
-              if (i > 0) const SizedBox(height: 8),
+              if (i > 0) SizedBox(height: AppSpacing.s8),
               NzRadioRow(
                 label: label,
                 selected: copy == i,
                 onTap: () => setSheet(() => copy = i),
               ),
             ],
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             NzPrimaryButton(
               label: 'إرسال إلى الطابعة',
               onPressed: () => Navigator.of(ctx).pop(true),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/inventory_item.dart';
@@ -12,7 +13,7 @@ class StockLevelTag extends StatelessWidget {
   @override
   Widget build(BuildContext context) => NzTag(
     level.label,
-    height: small ? 24 : 26,
+    height: small ? 24.r : 26.r,
     fontSize: small ? 11.5 : 12,
     tone: switch (level) {
       StockLevel.out => NzTagTone.dark,
@@ -31,16 +32,16 @@ class InventoryTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 18,
+      radius: AppRadius.r18,
       shadow: AppShadows.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const NzTableHead(
+          NzTableHead(
             cells: [
               ('المادة · القسم', 1, null, TextAlign.start),
-              ('الحالة', null, 72, TextAlign.start),
-              ('الكمية / الحد', null, 84, TextAlign.end),
+              ('الحالة', null, 72.r, TextAlign.start),
+              ('الكمية / الحد', null, 84.r, TextAlign.end),
             ],
           ),
           for (var i = 0; i < items.length; i++) ...[
@@ -74,8 +75,11 @@ class _Row extends StatelessWidget {
         onTap: onTap,
         child: Container(
           color: good ? null : const Color(0xFFFFFAF0),
-          constraints: const BoxConstraints(minHeight: 58),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          constraints: BoxConstraints(minHeight: 58.r),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.s12,
+            vertical: AppSpacing.s8,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -86,7 +90,7 @@ class _Row extends StatelessWidget {
                       item.name,
                       style: AppText.body(14.5, weight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: AppSpacing.s3),
                     Text.rich(
                       TextSpan(
                         children: [
@@ -107,14 +111,14 @@ class _Row extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 72,
+                width: 72.r,
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: StockLevelTag(item.level),
                 ),
               ),
               SizedBox(
-                width: 84,
+                width: 84.r,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -135,10 +139,10 @@ class _Row extends StatelessWidget {
                       textDirection: TextDirection.ltr,
                       style: AppText.num(15, height: 1.2),
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: AppSpacing.s6),
                     NzProgressBar(
                       value: item.fill,
-                      height: 4,
+                      height: 4.r,
                       fill: good ? AppColors.inkFaint : AppColors.gold,
                     ),
                   ],

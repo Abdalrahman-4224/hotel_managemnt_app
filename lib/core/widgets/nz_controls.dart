@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
+import '../theme/app_sizes.dart';
 
 class NzSegment<T> {
   const NzSegment(this.value, this.label, {this.count});
@@ -21,7 +23,7 @@ class NzSegmented<T> extends StatelessWidget {
     required this.segments,
     required this.selected,
     required this.onChanged,
-    this.height = 44,
+    this._height,
     this.fontSize = 14.5,
     this.countAsBadge = false,
   });
@@ -32,21 +34,22 @@ class NzSegmented<T> extends StatelessWidget {
   final List<NzSegment<T>> segments;
   final T selected;
   final ValueChanged<T> onChanged;
-  final double height;
+  final double? _height;
+  double get height => _height ?? 44.r;
   final double fontSize;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(AppSpacing.s4),
       decoration: BoxDecoration(
         color: AppColors.inert,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppRadius.r16),
       ),
       child: Row(
         children: [
           for (var i = 0; i < segments.length; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
+            if (i > 0) SizedBox(width: AppSpacing.s4),
             Expanded(child: _segment(segments[i])),
           ],
         ],
@@ -67,14 +70,14 @@ class NzSegmented<T> extends StatelessWidget {
             height: 1,
           ),
         ),
-        const SizedBox(width: 6),
+        SizedBox(width: AppSpacing.s6),
         Container(
-          constraints: const BoxConstraints(minWidth: 20),
-          height: 20,
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+          constraints: BoxConstraints(minWidth: 20.r),
+          height: 20.r,
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.s6),
           decoration: BoxDecoration(
             color: on ? AppColors.goldTint : const Color(0x141C1B19),
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(AppRadius.full),
           ),
           alignment: Alignment.center,
           child: Text(
@@ -99,11 +102,11 @@ class NzSegmented<T> extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             color: on ? AppColors.card : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
             boxShadow: on ? AppShadows.segment : null,
           ),
           alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.s4),
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: countAsBadge && s.count != null
@@ -146,10 +149,10 @@ class NzChoicePill extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.count,
-    this.height = 40,
-    this.radius = 99,
+    this._height,
+    this._radius,
     this.fontSize = 13.5,
-    this.horizontalPadding = 14,
+    this._horizontalPadding,
     this.offColor = AppColors.ink3,
     this.leading,
   });
@@ -158,10 +161,13 @@ class NzChoicePill extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final String? count;
-  final double height;
-  final double radius;
+  final double? _height;
+  double get height => _height ?? 40.r;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.full;
   final double fontSize;
-  final double horizontalPadding;
+  final double? _horizontalPadding;
+  double get horizontalPadding => _horizontalPadding ?? AppSpacing.s14;
   final Color offColor;
   final Widget? leading;
 
@@ -190,7 +196,10 @@ class NzChoicePill extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (leading != null) ...[leading!, const SizedBox(width: 6)],
+              if (leading != null) ...[
+                leading!,
+                SizedBox(width: AppSpacing.s6),
+              ],
               Text.rich(
                 TextSpan(
                   children: [
@@ -233,7 +242,7 @@ class NzPillScroller extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       clipBehavior: Clip.none,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.s16),
       child: Row(
         children: [
           for (var i = 0; i < children.length; i++) ...[
@@ -268,12 +277,12 @@ class NzSwitch extends StatelessWidget {
         onTap: () => onChanged(!value),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          width: 48,
-          height: 28,
-          padding: const EdgeInsets.all(3),
+          width: 48.r,
+          height: 28.r,
+          padding: EdgeInsets.all(AppSpacing.s3),
           decoration: BoxDecoration(
             color: value ? AppColors.gold : AppColors.switchOff,
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(AppRadius.full),
           ),
           child: AnimatedAlign(
             duration: const Duration(milliseconds: 180),
@@ -281,8 +290,8 @@ class NzSwitch extends StatelessWidget {
                 ? AlignmentDirectional.centerEnd
                 : AlignmentDirectional.centerStart,
             child: Container(
-              width: 22,
-              height: 22,
+              width: 22.r,
+              height: 22.r,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
@@ -307,12 +316,13 @@ class NzRadioDot extends StatelessWidget {
   const NzRadioDot({
     super.key,
     required this.selected,
-    this.size = 20,
+    this._size,
     this.color = AppColors.gold,
   });
 
   final bool selected;
-  final double size;
+  final double? _size;
+  double get size => _size ?? 20.r;
   final Color color;
 
   @override
@@ -340,17 +350,19 @@ class NzOptionTile extends StatelessWidget {
     required this.selected,
     required this.onTap,
     required this.child,
-    this.minHeight = 64,
-    this.padding = const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    this.radius = 16,
+    this._minHeight,
+    this.padding,
+    this._radius,
   });
 
   final bool selected;
   final VoidCallback onTap;
   final Widget child;
-  final double minHeight;
-  final EdgeInsetsGeometry padding;
-  final double radius;
+  final double? _minHeight;
+  double get minHeight => _minHeight ?? 64.r;
+  final EdgeInsetsGeometry? padding;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r16;
 
   @override
   Widget build(BuildContext context) {
@@ -360,7 +372,12 @@ class NzOptionTile extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         constraints: BoxConstraints(minHeight: minHeight),
-        padding: padding,
+        padding:
+            padding ??
+            EdgeInsets.symmetric(
+              horizontal: AppSpacing.s14,
+              vertical: AppSpacing.s12,
+            ),
         decoration: BoxDecoration(
           color: selected ? AppColors.goldTint : AppColors.card,
           borderRadius: BorderRadius.circular(radius),
@@ -400,11 +417,11 @@ class NzRadioRow extends StatelessWidget {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          height: 54,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          height: 54.r,
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.s16),
           decoration: BoxDecoration(
             color: selected ? AppColors.goldTint : AppColors.card,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             border: Border.all(
               color: selected ? AppColors.goldDeep : AppColors.lineStrong,
               width: selected ? 1.5 : 1,
@@ -431,7 +448,7 @@ class NzRadioRow extends StatelessWidget {
                     color: AppColors.inkFaint,
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
               ],
               NzRadioDot(selected: selected, color: AppColors.goldDeep),
             ],

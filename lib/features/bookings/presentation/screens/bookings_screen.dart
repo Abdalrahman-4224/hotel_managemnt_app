@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -80,8 +81,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                     NzOutlineButton(
                       label: 'الحملات',
                       icon: LucideIcons.users,
-                      height: 44,
-                      radius: 14,
+                      height: 44.r,
+                      radius: AppRadius.r14,
                       fontSize: 14,
                       onPressed: () => context.push(AppRoutes.campaigns),
                     ),
@@ -93,7 +94,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                 ],
                 bottomBleeds: true,
                 bottom: Padding(
-                  padding: const EdgeInsets.only(bottom: 2),
+                  padding: EdgeInsets.only(bottom: AppSpacing.s2),
                   child: NzPillScroller(
                     children: [
                       for (final t in _Tab.values)
@@ -120,10 +121,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
-                        16,
-                        14,
-                        16,
-                        NzBottomNav.bodyPadding(context) + 76,
+                        AppSpacing.s16,
+                        AppSpacing.s14,
+                        AppSpacing.s16,
+                        NzBottomNav.bodyPadding(context) + 76.r,
                       ),
                       children: [
                         Text(
@@ -134,7 +135,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                             height: 1.6,
                           ),
                         ),
-                        const SizedBox(height: 14),
+                        SizedBox(height: AppSpacing.s14),
                         if (rows.isEmpty)
                           NzDashedBox(
                             child: Text(
@@ -148,22 +149,22 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                           )
                         else ...[
                           NzCard(
-                            radius: 18,
+                            radius: AppRadius.r18,
                             shadow: AppShadows.card,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                const NzTableHead(
+                                NzTableHead(
                                   cells: [
-                                    ('رقم', null, 48, TextAlign.start),
+                                    ('رقم', null, 48.r, TextAlign.start),
                                     (
                                       'النزيل · الغرفة',
                                       1,
                                       null,
                                       TextAlign.start,
                                     ),
-                                    ('الحالة', null, 66, TextAlign.start),
-                                    ('المبلغ', null, 80, TextAlign.end),
+                                    ('الحالة', null, 66.r, TextAlign.start),
+                                    ('المبلغ', null, 80.r, TextAlign.end),
                                   ],
                                 ),
                                 for (var i = 0; i < rows.length; i++) ...[
@@ -179,7 +180,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 14),
+                          SizedBox(height: AppSpacing.s14),
                           Text(
                             'اضغط على اسم النزيل لعرض الحجز وإجراءاته.',
                             textAlign: TextAlign.center,
@@ -198,7 +199,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           ),
           if (canCreate)
             PositionedDirectional(
-              end: 16,
+              end: AppSpacing.s16,
               bottom: NzBottomNav.fabBottom(context),
               child: NzFloatingButton(
                 label: 'حجز جديد',
@@ -256,8 +257,13 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
     final can = ref.read(canProvider);
     showNzSheet<void>(
       context,
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 30),
-      gap: 8,
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.s18,
+        AppSpacing.s10,
+        AppSpacing.s18,
+        30.r,
+      ),
+      gap: AppSpacing.s8,
       builder: (ctx) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -284,7 +290,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
                       ),
                       style: AppText.body(12.5, color: AppColors.inkMuted),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: AppSpacing.s2),
                     Text(b.guest, style: AppText.display(21)),
                   ],
                 ),
@@ -292,7 +298,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
               BookingStatusTag(st),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           NzGrid(
             columns: 2,
             children: [
@@ -302,11 +308,11 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
               _Fact('الخروج', fmtDate(b.checkOut)),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           Row(
             children: [
               Expanded(child: _Total('الإجمالي · دولار', fmtNum(b.total))),
-              const SizedBox(width: 8),
+              SizedBox(width: AppSpacing.s8),
               Expanded(
                 child: _Total(
                   'المدفوع · دولار',
@@ -317,11 +323,11 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
             ],
           ),
           if (b.isGroup) ...[
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             NzOutlineButton(
               label: 'متابعة الحملة وتوزيع الأفراد',
-              height: 48,
-              radius: 14,
+              height: 48.r,
+              radius: AppRadius.r14,
               fontSize: 14.5,
               weight: FontWeight.w600,
               background: AppColors.goldTint,
@@ -333,21 +339,21 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
               },
             ),
           ],
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           const NzDivider(),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           Row(
             children: [
               Expanded(
                 child: NzOutlineButton(
                   label: 'إغلاق',
-                  height: 54,
+                  height: 54.r,
                   onPressed: () => Navigator.of(ctx).pop(),
                 ),
               ),
               // Without the permission for this step, the sheet stays read-only.
               if (_canDoMainAction(can, st)) ...[
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
                 Expanded(
                   flex: 2,
                   child: NzPrimaryButton(
@@ -363,7 +369,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
           ),
           // A booking can be cancelled until the guest checks in.
           if (st.isUpcoming && can.can(Permissions.bookingCancel)) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: AppSpacing.s4),
             TextButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
@@ -391,7 +397,7 @@ class BookingStatusTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return NzTag(
       status.label,
-      height: small ? 24 : 26,
+      height: small ? 24.r : 26.r,
       fontSize: small ? 11.5 : 12,
       tone: status == BookingStatus.staying
           ? NzTagTone.dark
@@ -425,12 +431,15 @@ class _BookingRow extends StatelessWidget {
         onTap: onTap,
         child: Container(
           color: highlight ? const Color(0xFFFFFAF0) : null,
-          constraints: const BoxConstraints(minHeight: 58),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          constraints: BoxConstraints(minHeight: 58.r),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.s12,
+            vertical: AppSpacing.s8,
+          ),
           child: Row(
             children: [
               SizedBox(
-                width: 48,
+                width: 48.r,
                 child: Text(
                   '${b.id}',
                   style: AppText.num(13, color: AppColors.ink3, height: 1),
@@ -446,15 +455,17 @@ class _BookingRow extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: AppText.body(14, weight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: AppSpacing.s3),
                     Row(
                       children: [
                         Container(
-                          height: 18,
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          height: 18.r,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.s6,
+                          ),
                           decoration: BoxDecoration(
                             color: b.isGroup ? AppColors.ink : AppColors.inert,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(6.r),
                           ),
                           alignment: Alignment.center,
                           child: Text(
@@ -469,7 +480,7 @@ class _BookingRow extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: AppSpacing.s6),
                         Flexible(
                           child: Text(
                             b.rooms,
@@ -487,14 +498,14 @@ class _BookingRow extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 66,
+                width: 66.r,
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: BookingStatusTag(status, small: true),
                 ),
               ),
               SizedBox(
-                width: 80,
+                width: 80.r,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -526,13 +537,16 @@ class _Fact extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 14,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      radius: AppRadius.r14,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s10,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppText.body(12, color: AppColors.inkMuted)),
-          const SizedBox(height: 3),
+          SizedBox(height: AppSpacing.s3),
           Text(value, style: AppText.num(14.5, weight: FontWeight.w500)),
         ],
       ),
@@ -552,8 +566,11 @@ class _Total extends StatelessWidget {
     return NzCard(
       color: AppColors.ink,
       borderColor: null,
-      radius: 16,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      radius: AppRadius.r16,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s14,
+        vertical: AppSpacing.s12,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

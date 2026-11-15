@@ -1,5 +1,6 @@
 export '../theme/app_colors.dart';
 export '../theme/app_motion.dart';
+export '../theme/app_sizes.dart';
 export '../theme/app_text.dart';
 export 'nz_badges.dart';
 export 'nz_bottom_nav.dart';

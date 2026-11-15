@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/staff_member.dart';
@@ -12,16 +13,16 @@ class StaffTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 18,
+      radius: AppRadius.r18,
       shadow: AppShadows.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const NzTableHead(
+          NzTableHead(
             cells: [
               ('الموظف · الدور', 1, null, TextAlign.start),
-              ('حجوزات', null, 60, TextAlign.center),
-              ('مهام', null, 52, TextAlign.center),
+              ('حجوزات', null, 60.r, TextAlign.center),
+              ('مهام', null, 52.r, TextAlign.center),
             ],
           ),
           for (var i = 0; i < staff.length; i++) ...[
@@ -49,9 +50,12 @@ class _StaffRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 62),
+          constraints: BoxConstraints(minHeight: 62.r),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.s12,
+              vertical: AppSpacing.s8,
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -65,8 +69,8 @@ class _StaffRow extends StatelessWidget {
                             bottom: -1,
                             end: -1,
                             child: Container(
-                              width: 11,
-                              height: 11,
+                              width: 11.r,
+                              height: 11.r,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: m.online
@@ -81,7 +85,7 @@ class _StaffRow extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: AppSpacing.s10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,7 +99,7 @@ class _StaffRow extends StatelessWidget {
                                 weight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            SizedBox(height: AppSpacing.s2),
                             Text(
                               '${m.role} · ${m.lastSeen}',
                               maxLines: 1,
@@ -112,7 +116,7 @@ class _StaffRow extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 60,
+                  width: 60.r,
                   child: Text(
                     '${m.bookings}',
                     textAlign: TextAlign.center,
@@ -120,7 +124,7 @@ class _StaffRow extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 52,
+                  width: 52.r,
                   child: Text(
                     '${m.tasks}',
                     textAlign: TextAlign.center,
@@ -144,26 +148,26 @@ class ActivityTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 18,
+      radius: AppRadius.r18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const NzTableHead(
+          NzTableHead(
             cells: [
-              ('الوقت', null, 58, TextAlign.start),
+              ('الوقت', null, 58.r, TextAlign.start),
               ('الإجراء', 1, null, TextAlign.start),
-              ('المبلغ', null, 82, TextAlign.end),
+              ('المبلغ', null, 82.r, TextAlign.end),
             ],
           ),
           for (var i = 0; i < items.length; i++) ...[
             if (i > 0) const NzDivider(),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(AppSpacing.s12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    width: 58,
+                    width: 58.r,
                     child: Text(
                       items[i].time,
                       style: AppText.num(
@@ -180,7 +184,7 @@ class ActivityTable extends StatelessWidget {
                     ),
                   ),
                   SizedBox(
-                    width: 82,
+                    width: 82.r,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [

@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_sizes.dart';
 import '../theme/app_text.dart';
 
 class NzNavItem {
@@ -43,11 +45,11 @@ class NzBottomNav extends StatelessWidget {
   ];
 
   /// Transparent band above the bar where the active circle sits.
-  static const _overlap = 26.0;
+  static double get _overlap => 26.r;
 
   /// Height of the bar itself (call from outside the shell's body).
   static double heightOf(BuildContext context) =>
-      84 + math.max(MediaQuery.paddingOf(context).bottom, 24);
+      84.r + math.max(MediaQuery.paddingOf(context).bottom, 24.r);
 
   // Inside the shell's body, Scaffold(extendBody: true) reports the bar's
   // height as the bottom padding, so these read it from there.
@@ -57,8 +59,12 @@ class NzBottomNav extends StatelessWidget {
       MediaQuery.paddingOf(context).bottom + _overlap;
 
   /// Bottom offset for a floating action button sitting above the bar.
+  ///
+  /// The active tab's circle rises to the very top of the bar's band, so the
+  /// button sits a gap above that line - otherwise, on a tab whose circle is
+  /// under the button (Finance), the two overlap.
   static double fabBottom(BuildContext context) =>
-      MediaQuery.paddingOf(context).bottom - 8;
+      MediaQuery.paddingOf(context).bottom + AppSpacing.s12;
 
   @override
   Widget build(BuildContext context) {
@@ -125,12 +131,12 @@ class _NavButton extends StatelessWidget {
             AnimatedPositioned(
               duration: const Duration(milliseconds: 320),
               curve: Curves.easeOutCubic,
-              top: active ? 0 : 40,
+              top: active ? 0 : 40.r,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 320),
                 curve: Curves.easeOutCubic,
-                width: active ? 54 : 22,
-                height: active ? 54 : 22,
+                width: active ? 54.r : 22.r,
+                height: active ? 54.r : 22.r,
                 decoration: BoxDecoration(
                   color: active ? AppColors.gold : Colors.transparent,
                   shape: BoxShape.circle,
@@ -147,13 +153,13 @@ class _NavButton extends StatelessWidget {
                 ),
                 child: Icon(
                   item.icon,
-                  size: 22,
+                  size: 22.r,
                   color: active ? AppColors.ink : AppColors.onInkMuted,
                 ),
               ),
             ),
             Positioned(
-              top: 72,
+              top: 72.r,
               left: 0,
               right: 0,
               child: Text(
@@ -191,15 +197,17 @@ class _NotchPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // The shape is in design units, scaled like the rest of the bar;
+    // c (the active tab's centre) is already in pixels.
     final w = size.width, h = size.height;
     final path = Path()
-      ..moveTo(0, 44)
-      ..quadraticBezierTo(0, 26, 18, 26)
-      ..lineTo(c - 50, 26)
-      ..cubicTo(c - 30, 26, c - 34, 66, c, 66)
-      ..cubicTo(c + 34, 66, c + 30, 26, c + 50, 26)
-      ..lineTo(w - 18, 26)
-      ..quadraticBezierTo(w, 26, w, 44)
+      ..moveTo(0, 44.r)
+      ..quadraticBezierTo(0, 26.r, 18.r, 26.r)
+      ..lineTo(c - 50.r, 26.r)
+      ..cubicTo(c - 30.r, 26.r, c - 34.r, 66.r, c, 66.r)
+      ..cubicTo(c + 34.r, 66.r, c + 30.r, 26.r, c + 50.r, 26.r)
+      ..lineTo(w - 18.r, 26.r)
+      ..quadraticBezierTo(w, 26.r, w, 44.r)
       ..lineTo(w, h)
       ..lineTo(0, h)
       ..close();

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
+import '../theme/app_sizes.dart';
 
 /// Solid ink button (the design's primary action).
 class NzPrimaryButton extends StatelessWidget {
@@ -10,8 +12,8 @@ class NzPrimaryButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.icon,
-    this.height = 54,
-    this.radius = 16,
+    this._height,
+    this._radius,
     this.background = AppColors.ink,
     this.foreground = AppColors.onInk,
     this.iconColor = AppColors.goldLight,
@@ -24,8 +26,10 @@ class NzPrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
   final IconData? icon;
-  final double height;
-  final double radius;
+  final double? _height;
+  double get height => _height ?? 54.r;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r16;
   final Color background;
   final Color foreground;
   final Color iconColor;
@@ -53,10 +57,10 @@ class NzPrimaryButton extends StatelessWidget {
             onTap: enabled ? onPressed : null,
             child: _ButtonContent(
               icon: icon,
-              iconSize: 18,
+              iconSize: 18.r,
               iconColor: iconColor,
-              gap: 9,
-              padding: 16,
+              gap: 9.r,
+              padding: AppSpacing.s16,
               label: Text(
                 label,
                 maxLines: 1,
@@ -84,8 +88,8 @@ class NzOutlineButton extends StatelessWidget {
     required this.onPressed,
     this.icon,
     this.iconColor = AppColors.goldDeep,
-    this.height = 52,
-    this.radius = 16,
+    this._height,
+    this._radius,
     this.background = AppColors.card,
     this.foreground = AppColors.ink,
     this.borderColor = AppColors.lineStrong,
@@ -97,8 +101,10 @@ class NzOutlineButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final IconData? icon;
   final Color iconColor;
-  final double height;
-  final double radius;
+  final double? _height;
+  double get height => _height ?? 52.r;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r16;
   final Color background;
   final Color foreground;
   final Color borderColor;
@@ -121,10 +127,10 @@ class NzOutlineButton extends StatelessWidget {
           onTap: onPressed,
           child: _ButtonContent(
             icon: icon,
-            iconSize: 16,
+            iconSize: 16.r,
             iconColor: iconColor,
-            gap: 6,
-            padding: 12,
+            gap: AppSpacing.s6,
+            padding: AppSpacing.s12,
             label: Text(
               label,
               maxLines: 1,
@@ -150,9 +156,9 @@ class NzIconButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.tooltip,
-    this.size = 44,
-    this.radius = 14,
-    this.iconSize = 19,
+    this._size,
+    this._radius,
+    this._iconSize,
     this.iconColor = AppColors.ink3,
     this.background = AppColors.card,
     this.borderColor = AppColors.lineStrong,
@@ -164,9 +170,12 @@ class NzIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
   final String? tooltip;
-  final double size;
-  final double radius;
-  final double iconSize;
+  final double? _size;
+  double get size => _size ?? 44.r;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r14;
+  final double? _iconSize;
+  double get iconSize => _iconSize ?? 19.r;
   final Color iconColor;
   final Color background;
   final Color borderColor;
@@ -202,11 +211,11 @@ class NzIconButton extends StatelessWidget {
           button,
           if (showDot)
             Positioned(
-              top: 9,
-              left: 10,
+              top: 9.r,
+              left: AppSpacing.s10,
               child: Container(
-                width: 8,
-                height: 8,
+                width: 8.r,
+                height: 8.r,
                 decoration: BoxDecoration(
                   color: AppColors.gold,
                   shape: BoxShape.circle,
@@ -216,15 +225,15 @@ class NzIconButton extends StatelessWidget {
             ),
           if (badge != null)
             Positioned(
-              top: -5,
-              left: -5,
+              top: -5.r,
+              left: -5.r,
               child: Container(
-                constraints: const BoxConstraints(minWidth: 20),
-                height: 20,
-                padding: const EdgeInsets.symmetric(horizontal: 5),
+                constraints: BoxConstraints(minWidth: 20.r),
+                height: 20.r,
+                padding: EdgeInsets.symmetric(horizontal: 5.r),
                 decoration: BoxDecoration(
                   color: AppColors.gold,
-                  borderRadius: BorderRadius.circular(99),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                   border: Border.all(color: AppColors.paper, width: 2),
                 ),
                 alignment: Alignment.center,
@@ -264,11 +273,11 @@ class NzLinkButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppRadius.r8),
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 44),
+        constraints: BoxConstraints(minHeight: 44.r),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.s6),
           child: Center(
             widthFactor: 1,
             child: Text(

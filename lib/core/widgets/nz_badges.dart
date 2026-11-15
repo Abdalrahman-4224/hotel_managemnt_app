@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
+import '../theme/app_sizes.dart';
 
 enum NzTagTone { gold, dark, neutral, solidGold, outline }
 
@@ -11,14 +13,15 @@ class NzTag extends StatelessWidget {
     this.label, {
     super.key,
     this.tone = NzTagTone.neutral,
-    this.height = 26,
+    this._height,
     this.fontSize = 12.5,
     this.icon,
   });
 
   final String label;
   final NzTagTone tone;
-  final double height;
+  final double? _height;
+  double get height => _height ?? 26.r;
   final double fontSize;
   final IconData? icon;
 
@@ -53,10 +56,12 @@ class NzTag extends StatelessWidget {
     };
     return Container(
       height: height,
-      padding: EdgeInsets.symmetric(horizontal: height < 26 ? 8 : 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: height < 26.r ? AppSpacing.s8 : AppSpacing.s10,
+      ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(99),
+        borderRadius: BorderRadius.circular(AppRadius.full),
         border: border == null ? null : Border.all(color: border),
       ),
       // Center(widthFactor: 1) keeps the pill hugging its label even when
@@ -68,7 +73,7 @@ class NzTag extends StatelessWidget {
           children: [
             if (icon != null) ...[
               Icon(icon, size: fontSize + 1, color: fg),
-              const SizedBox(width: 4),
+              SizedBox(width: AppSpacing.s4),
             ],
             Text(
               label,
@@ -91,20 +96,21 @@ class NzProgressBar extends StatelessWidget {
   const NzProgressBar({
     super.key,
     required this.value,
-    this.height = 5,
+    this._height,
     this.track = AppColors.inert,
     this.fill = AppColors.gold,
   });
 
   final double value;
-  final double height;
+  final double? _height;
+  double get height => _height ?? 5.r;
   final Color track;
   final Color fill;
 
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(99),
+      borderRadius: BorderRadius.circular(AppRadius.full),
       child: SizedBox(
         height: height,
         width: double.infinity,
@@ -118,7 +124,7 @@ class NzProgressBar extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: fill,
-                  borderRadius: BorderRadius.circular(99),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
               ),
             ),
@@ -134,14 +140,15 @@ class NzInitialAvatar extends StatelessWidget {
   const NzInitialAvatar(
     this.initial, {
     super.key,
-    this.size = 38,
+    this._size,
     this.fontSize = 14,
     this.serif = false,
     this.dark = false,
   });
 
   final String initial;
-  final double size;
+  final double? _size;
+  double get size => _size ?? 38.r;
   final double fontSize;
   final bool serif;
 
@@ -183,16 +190,19 @@ class NzIconTile extends StatelessWidget {
     this.icon, {
     super.key,
     this.tone = NzIconTileTone.tint,
-    this.size = 42,
-    this.radius = 14,
-    this.iconSize = 20,
+    this._size,
+    this._radius,
+    this._iconSize,
   });
 
   final IconData icon;
   final NzIconTileTone tone;
-  final double size;
-  final double radius;
-  final double iconSize;
+  final double? _size;
+  double get size => _size ?? 42.r;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r14;
+  final double? _iconSize;
+  double get iconSize => _iconSize ?? 20.r;
 
   @override
   Widget build(BuildContext context) {
@@ -222,9 +232,10 @@ class NzIconTile extends StatelessWidget {
 
 /// The square "نُ" brand mark.
 class NzBrandMark extends StatelessWidget {
-  const NzBrandMark({super.key, this.size = 42, this.radius = 14});
+  const NzBrandMark({super.key, this._size, this.radius = 14});
 
-  final double size;
+  final double? _size;
+  double get size => _size ?? 42.r;
   final double radius;
 
   @override

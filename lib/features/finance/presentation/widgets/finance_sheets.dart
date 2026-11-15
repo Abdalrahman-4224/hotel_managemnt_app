@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -25,15 +26,15 @@ Future<void> showTransactionDetail(
           tx.reference,
           trailing: NzTag(
             tx.kind.label,
-            height: 24,
+            height: 24.r,
             fontSize: 11.5,
             tone: tx.isIncome ? NzTagTone.gold : NzTagTone.neutral,
           ),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: AppSpacing.s14),
         NzCard(
-          radius: 18,
-          padding: const EdgeInsets.all(14),
+          radius: AppRadius.r18,
+          padding: EdgeInsets.all(AppSpacing.s14),
           child: Column(
             children: [
               Text(
@@ -48,7 +49,7 @@ Future<void> showTransactionDetail(
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: AppSpacing.s14),
         Row(
           children: [
             for (final (i, f) in [
@@ -56,19 +57,19 @@ Future<void> showTransactionDetail(
               ('الطريقة', tx.method.label),
               ('الموظف', tx.staff),
             ].indexed) ...[
-              if (i > 0) const SizedBox(width: 8),
+              if (i > 0) SizedBox(width: AppSpacing.s8),
               Expanded(
                 child: _Fact(label: f.$1, value: f.$2),
               ),
             ],
           ],
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: AppSpacing.s14),
         Text(
           'الحركة لا تُحذف — التصحيح يكون بحركة معاكسة.',
           style: AppText.body(12.5, color: AppColors.inkFaint, height: 1.6),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: AppSpacing.s14),
         Row(
           children: [
             Expanded(
@@ -78,11 +79,11 @@ Future<void> showTransactionDetail(
               ),
             ),
             if (canReverse) ...[
-              const SizedBox(width: 10),
+              SizedBox(width: AppSpacing.s10),
               Expanded(
                 child: NzPrimaryButton(
                   label: 'حركة معاكسة',
-                  height: 52,
+                  height: 52.r,
                   fontSize: 15,
                   onPressed: () async {
                     Navigator.of(ctx).pop();
@@ -111,13 +112,16 @@ class _Fact extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 14,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      radius: AppRadius.r14,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s10,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppText.body(12, color: AppColors.inkMuted)),
-          const SizedBox(height: 3),
+          SizedBox(height: AppSpacing.s3),
           Text(
             value,
             maxLines: 1,
@@ -138,7 +142,7 @@ Future<void> showFinanceFilter(
   var draft = controller.filter;
   return showNzSheet<void>(
     context,
-    gap: 16,
+    gap: AppSpacing.s16,
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setSheet) {
         Widget group<T>(
@@ -151,19 +155,19 @@ Future<void> showFinanceFilter(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(label, style: AppText.body(13, color: AppColors.inkMuted)),
-              const SizedBox(height: 7),
+              SizedBox(height: 7.r),
               Row(
                 children: [
                   for (final (i, o) in opts.indexed) ...[
-                    if (i > 0) const SizedBox(width: 8),
+                    if (i > 0) SizedBox(width: AppSpacing.s8),
                     Expanded(
                       child: NzChoicePill(
                         label: o.$2,
                         selected: o.$1 == current,
-                        height: 44,
-                        radius: 12,
+                        height: 44.r,
+                        radius: AppRadius.r12,
                         fontSize: 14,
-                        horizontalPadding: 6,
+                        horizontalPadding: AppSpacing.s6,
                         offColor: AppColors.ink,
                         onTap: () => setSheet(() => pick(o.$1)),
                       ),
@@ -187,14 +191,14 @@ Future<void> showFinanceFilter(
                 onPressed: () => setSheet(() => draft = const FinanceFilter()),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppSpacing.s16),
             group<Period>(
               'الفترة',
               [for (final p in Period.values) (p, p.short)],
               draft.period,
               (v) => draft = draft.copyWith(period: v),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppSpacing.s16),
             group<TxCurrency?>(
               'العملة',
               const [
@@ -205,7 +209,7 @@ Future<void> showFinanceFilter(
               draft.currency,
               (v) => draft = draft.copyWith(currency: () => v),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppSpacing.s16),
             group<TxMethod?>(
               'طريقة الدفع',
               const [
@@ -216,7 +220,7 @@ Future<void> showFinanceFilter(
               draft.method,
               (v) => draft = draft.copyWith(method: () => v),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: AppSpacing.s16),
             NzPrimaryButton(
               label: 'عرض ${controller.countForDraft(draft)} حركة',
               onPressed: () {
@@ -257,7 +261,7 @@ Future<void> showNewTransaction(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(label, style: AppText.body(13, color: AppColors.inkMuted)),
-              const SizedBox(height: 6),
+              SizedBox(height: AppSpacing.s6),
               NzSegmented<T>(
                 segments: segs,
                 selected: value,
@@ -271,7 +275,7 @@ Future<void> showNewTransaction(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const NzSheetTitle('حركة مالية جديدة'),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             seg<TxKind>(
               'نوع الحركة',
               const [
@@ -281,7 +285,7 @@ Future<void> showNewTransaction(
               kind,
               (v) => kind = v,
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             seg<TxCurrency>(
               'العملة',
               const [
@@ -291,7 +295,7 @@ Future<void> showNewTransaction(
               currency,
               (v) => currency = v,
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             seg<TxMethod>(
               'الطريقة',
               const [
@@ -301,7 +305,7 @@ Future<void> showNewTransaction(
               method,
               (v) => method = v,
             ),
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -320,7 +324,7 @@ Future<void> showNewTransaction(
                     onChanged: (_) => setSheet(() => error = false),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
                 Expanded(
                   child: NzTextField(
                     label: 'المرجع',
@@ -332,13 +336,13 @@ Future<void> showNewTransaction(
               ],
             ),
             if (error) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: AppSpacing.s8),
               Text(
                 'اكتب المبلغ والمرجع.',
                 style: AppText.body(13, color: AppColors.goldDeep),
               ),
             ],
-            const SizedBox(height: 14),
+            SizedBox(height: AppSpacing.s14),
             NzPrimaryButton(
               label: 'تسجيل الحركة',
               onPressed: () async {

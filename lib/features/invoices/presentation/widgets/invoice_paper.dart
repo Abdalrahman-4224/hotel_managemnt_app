@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -14,10 +15,10 @@ class InvoicePaper extends StatelessWidget {
   Widget build(BuildContext context) {
     final inv = invoice;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.s18, vertical: 22.r),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppRadius.r8),
         boxShadow: const [
           BoxShadow(
             color: Color(0x0D1C1B19),
@@ -36,23 +37,23 @@ class InvoicePaper extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _letterhead(inv),
-          const SizedBox(height: 18),
+          SizedBox(height: AppSpacing.s18),
           _guestBox(inv),
-          const SizedBox(height: 18),
+          SizedBox(height: AppSpacing.s18),
           _LinesTable(lines: inv.lines),
-          const SizedBox(height: 18),
+          SizedBox(height: AppSpacing.s18),
           Row(
             children: [
               Expanded(child: _Total('الإجمالي · دولار', inv.totalUsd)),
-              const SizedBox(width: 10),
+              SizedBox(width: AppSpacing.s10),
               Expanded(
                 child: _Total('الإجمالي · دينار', inv.totalIqd, end: true),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: AppSpacing.s18),
           _payments(inv),
-          const SizedBox(height: 18),
+          SizedBox(height: AppSpacing.s18),
           Text(
             'تُدفع كل عملة على حدة — لا تحويل بين الدولار والدينار.\nالموظف: ${inv.staff}',
             textAlign: TextAlign.center,
@@ -73,14 +74,14 @@ class InvoicePaper extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const NzBrandMark(size: 30, radius: 10),
-                  const SizedBox(width: 8),
+                  NzBrandMark(size: 30.r, radius: AppRadius.r10),
+                  SizedBox(width: AppSpacing.s8),
                   Flexible(
                     child: Text(inv.hotelName, style: AppText.display(18)),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: AppSpacing.s6),
               Text(
                 inv.hotelAddress,
                 style: AppText.body(12.5, color: AppColors.inkMuted),
@@ -88,7 +89,7 @@ class InvoicePaper extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: AppSpacing.s12),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -122,10 +123,10 @@ class InvoicePaper extends StatelessWidget {
     );
     final numStyle = AppText.num(13, weight: FontWeight.w500, height: 1.5);
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(AppSpacing.s12),
       decoration: BoxDecoration(
         color: AppColors.paper,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppRadius.r10),
       ),
       child: Column(
         children: [
@@ -140,7 +141,7 @@ class InvoicePaper extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: AppSpacing.s10),
               Expanded(
                 child: cell(
                   'الغرفة',
@@ -149,13 +150,13 @@ class InvoicePaper extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: AppSpacing.s10),
           Row(
             children: [
               Expanded(
                 child: cell('الدخول', Text(inv.checkIn, style: numStyle)),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: AppSpacing.s10),
               Expanded(
                 child: cell('الخروج', Text(inv.checkOut, style: numStyle)),
               ),
@@ -170,7 +171,7 @@ class InvoicePaper extends StatelessWidget {
     return CustomPaint(
       painter: _DashedTopBorder(),
       child: Padding(
-        padding: const EdgeInsets.only(top: 14),
+        padding: EdgeInsets.only(top: AppSpacing.s14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -183,7 +184,7 @@ class InvoicePaper extends StatelessWidget {
               ),
             ),
             for (final p in inv.payments) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: AppSpacing.s8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -196,22 +197,22 @@ class InvoicePaper extends StatelessWidget {
               ),
             ],
             if (inv.paidInFull) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: AppSpacing.s12),
               Container(
-                height: 34,
+                height: 34.r,
                 decoration: BoxDecoration(
                   color: AppColors.goldTint,
-                  borderRadius: BorderRadius.circular(99),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       LucideIcons.check,
-                      size: 15,
+                      size: 15.r,
                       color: AppColors.goldDeep,
                     ),
-                    const SizedBox(width: 6),
+                    SizedBox(width: AppSpacing.s6),
                     Text(
                       'مسدّدة بالكامل',
                       style: AppText.body(
@@ -259,9 +260,9 @@ class _LinesTable extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(height: 2, color: AppColors.ink),
+        Container(height: 2.r, color: AppColors.ink),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.s10),
           child: row([
             Text('البيان', style: head),
             Text('الكمية', style: head, textAlign: TextAlign.center),
@@ -272,7 +273,7 @@ class _LinesTable extends StatelessWidget {
         const NzDivider(color: AppColors.lineStrong),
         for (var i = 0; i < lines.length; i++) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.s12),
             child: row([
               Text(lines[i].description, style: AppText.body(13.5)),
               Text(
@@ -293,7 +294,7 @@ class _LinesTable extends StatelessWidget {
             ]),
           ),
           i == lines.length - 1
-              ? Container(height: 2, color: AppColors.ink)
+              ? Container(height: 2.r, color: AppColors.ink)
               : const NzDivider(),
         ],
       ],
@@ -316,7 +317,7 @@ class _Total extends StatelessWidget {
           : CrossAxisAlignment.start,
       children: [
         Text(label, style: AppText.body(12.5, color: AppColors.inkMuted)),
-        const SizedBox(height: 4),
+        SizedBox(height: AppSpacing.s4),
         Text(value, style: AppText.num(28, height: 1.1)),
       ],
     );

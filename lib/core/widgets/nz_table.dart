@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
+import '../theme/app_sizes.dart';
 
 /// Header row for the design's simple tables.
 class NzTableHead extends StatelessWidget {
@@ -17,7 +18,10 @@ class NzTableHead extends StatelessWidget {
         color: AppColors.paper,
         border: Border(bottom: BorderSide(color: AppColors.lineStrong)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s10,
+      ),
       child: Row(
         children: [
           for (final c in cells)

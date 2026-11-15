@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
+import '../theme/app_sizes.dart';
 
 /// Opens the design's bottom sheet: rounded 28px top, grabber, dim scrim.
 ///
@@ -10,9 +12,12 @@ Future<T?> showNzSheet<T>(
   BuildContext context, {
   required WidgetBuilder builder,
   Color background = AppColors.sheet,
-  EdgeInsets padding = const EdgeInsets.fromLTRB(18, 10, 18, 30),
-  double gap = 14,
+  EdgeInsets? padding,
+  double? gap,
 }) {
+  final pad =
+      padding ??
+      EdgeInsets.fromLTRB(AppSpacing.s18, AppSpacing.s10, AppSpacing.s18, 30.r);
   return showModalBottomSheet<T>(
     context: context,
     useRootNavigator: true,
@@ -20,8 +25,8 @@ Future<T?> showNzSheet<T>(
     useSafeArea: true,
     backgroundColor: background,
     barrierColor: AppColors.scrim,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r28)),
     ),
     builder: (ctx) {
       final insets = MediaQuery.viewInsetsOf(ctx).bottom;
@@ -29,22 +34,22 @@ Future<T?> showNzSheet<T>(
       return Padding(
         padding: EdgeInsets.only(bottom: insets),
         child: SingleChildScrollView(
-          padding: padding.copyWith(bottom: padding.bottom + safe),
+          padding: pad.copyWith(bottom: pad.bottom + safe),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Center(
                 child: Container(
-                  width: 40,
-                  height: 5,
+                  width: 40.r,
+                  height: 5.r,
                   decoration: BoxDecoration(
                     color: AppColors.grabber,
-                    borderRadius: BorderRadius.circular(99),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                   ),
                 ),
               ),
-              SizedBox(height: gap),
+              SizedBox(height: gap ?? AppSpacing.s14),
               builder(ctx),
             ],
           ),
@@ -73,7 +78,7 @@ class NzSheetTitle extends StatelessWidget {
             children: [
               Text(title, style: AppText.display(21)),
               if (subtitle != null) ...[
-                const SizedBox(height: 2),
+                SizedBox(height: AppSpacing.s2),
                 Text(
                   subtitle!,
                   style: AppText.body(13, color: AppColors.inkMuted),
@@ -82,7 +87,7 @@ class NzSheetTitle extends StatelessWidget {
             ],
           ),
         ),
-        if (trailing != null) ...[const SizedBox(width: 10), trailing!],
+        if (trailing != null) ...[SizedBox(width: AppSpacing.s10), trailing!],
       ],
     );
   }
@@ -96,8 +101,15 @@ void showNzToast(BuildContext context, String message) {
     SnackBar(
       behavior: SnackBarBehavior.floating,
       backgroundColor: AppColors.ink,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.r16),
+      ),
+      margin: EdgeInsets.fromLTRB(
+        AppSpacing.s16,
+        0,
+        AppSpacing.s16,
+        AppSpacing.s24,
+      ),
       duration: const Duration(milliseconds: 2400),
       content: Text(
         message,
@@ -128,15 +140,20 @@ Future<T?> showNzTallSheet<T>(
     useSafeArea: true,
     backgroundColor: AppColors.sheet,
     barrierColor: AppColors.scrim,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r28)),
     ),
     builder: (ctx) {
       final column = Column(
         mainAxisSize: shrinkWrap ? MainAxisSize.min : MainAxisSize.max,
         children: [
           Container(
-            padding: const EdgeInsets.fromLTRB(18, 10, 18, 12),
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.s18,
+              AppSpacing.s10,
+              AppSpacing.s18,
+              AppSpacing.s12,
+            ),
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: AppColors.line)),
             ),
@@ -145,15 +162,15 @@ Future<T?> showNzTallSheet<T>(
               children: [
                 Center(
                   child: Container(
-                    width: 40,
-                    height: 5,
+                    width: 40.r,
+                    height: 5.r,
                     decoration: BoxDecoration(
                       color: AppColors.grabber,
-                      borderRadius: BorderRadius.circular(99),
+                      borderRadius: BorderRadius.circular(AppRadius.full),
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: AppSpacing.s8),
                 header(ctx),
               ],
             ),
@@ -161,17 +178,22 @@ Future<T?> showNzTallSheet<T>(
           Flexible(
             fit: shrinkWrap ? FlexFit.loose : FlexFit.tight,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.s18,
+                AppSpacing.s14,
+                AppSpacing.s18,
+                AppSpacing.s18,
+              ),
               child: body(ctx),
             ),
           ),
           if (footer != null)
             Container(
               padding: EdgeInsets.fromLTRB(
-                18,
-                12,
-                18,
-                30 + MediaQuery.paddingOf(ctx).bottom,
+                AppSpacing.s18,
+                AppSpacing.s12,
+                AppSpacing.s18,
+                30.r + MediaQuery.paddingOf(ctx).bottom,
               ),
               decoration: const BoxDecoration(
                 border: Border(top: BorderSide(color: AppColors.line)),
@@ -203,17 +225,20 @@ class NzFact extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s10,
+      ),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppRadius.r14),
         border: Border.all(color: AppColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppText.body(12, color: AppColors.inkMuted)),
-          const SizedBox(height: 3),
+          SizedBox(height: AppSpacing.s3),
           Text(
             value,
             style: numeric

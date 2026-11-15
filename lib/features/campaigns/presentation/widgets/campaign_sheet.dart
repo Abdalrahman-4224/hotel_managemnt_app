@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
@@ -38,7 +39,7 @@ Future<void> showCampaignSheet(
                 ),
                 style: AppText.body(12.5, color: AppColors.inkMuted),
               ),
-              const SizedBox(height: 2),
+              SizedBox(height: AppSpacing.s2),
               Text(c.name, style: AppText.display(21)),
             ],
           ),
@@ -60,22 +61,22 @@ Future<void> showCampaignSheet(
             NzFact('الليالي', '${c.nights}'),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: AppSpacing.s16),
         _MoneyCard(c),
-        const SizedBox(height: 16),
+        SizedBox(height: AppSpacing.s16),
         Text('غرف الحملة', style: AppText.display(16, height: 1.4)),
-        const SizedBox(height: 8),
+        SizedBox(height: AppSpacing.s8),
         Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: AppSpacing.s6,
+          runSpacing: AppSpacing.s6,
           children: [
             for (final r in c.rooms)
               Container(
-                height: 32,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+                height: 32.r,
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                 decoration: BoxDecoration(
                   color: AppColors.card,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppRadius.r10),
                   border: Border.all(color: AppColors.lineStrong),
                 ),
                 child: Center(
@@ -98,7 +99,7 @@ Future<void> showCampaignSheet(
           )
         : NzOutlineButton(
             label: 'إغلاق',
-            height: 54,
+            height: 54.r,
             onPressed: () => Navigator.of(ctx).pop(),
           ),
   );
@@ -120,7 +121,7 @@ class _MoneyCard extends StatelessWidget {
     return NzCard(
       color: AppColors.ink,
       borderColor: null,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.s16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -129,7 +130,7 @@ class _MoneyCard extends StatelessWidget {
             style: AppText.body(12.5, color: AppColors.onInkMuted),
           ),
           for (final (k, v) in rows) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: AppSpacing.s10),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [

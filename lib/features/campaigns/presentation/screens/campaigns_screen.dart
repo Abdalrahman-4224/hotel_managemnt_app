@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -53,7 +54,7 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
                 title: 'الحملات',
                 bottom: NzSegmented<CampaignStatus?>(
                   selected: _tab,
-                  height: 42,
+                  height: 42.r,
                   fontSize: 13.5,
                   onChanged: (v) => setState(() => _tab = v),
                   segments: [
@@ -76,10 +77,10 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
-                        16,
-                        14,
-                        16,
-                        NzBottomNav.bodyPadding(context) + 76,
+                        AppSpacing.s16,
+                        AppSpacing.s14,
+                        AppSpacing.s16,
+                        NzBottomNav.bodyPadding(context) + 76.r,
                       ),
                       children: [
                         if (list.isEmpty)
@@ -94,7 +95,7 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
                             ),
                           ),
                         for (final (i, c) in list.indexed) ...[
-                          if (i > 0) const SizedBox(height: 12),
+                          if (i > 0) SizedBox(height: AppSpacing.s12),
                           CampaignCard(
                             campaign: c,
                             onTap: () => showCampaignSheet(
@@ -117,7 +118,7 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
           if (can.can(Permissions.campaignCreate) &&
               can.can(Permissions.bookingCreate))
             PositionedDirectional(
-              end: 16,
+              end: AppSpacing.s16,
               bottom: NzBottomNav.fabBottom(context),
               child: NzFloatingButton(
                 label: 'حملة جديدة',

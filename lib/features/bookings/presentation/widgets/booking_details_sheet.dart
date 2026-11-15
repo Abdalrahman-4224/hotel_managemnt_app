@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -27,8 +28,8 @@ Future<bool?> showBookingDetails(
     useSafeArea: true,
     backgroundColor: AppColors.sheet,
     barrierColor: AppColors.scrim,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.r28)),
     ),
     builder: (ctx) => FractionallySizedBox(
       heightFactor: .92,
@@ -72,10 +73,10 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
             Expanded(
               child: ListView(
                 padding: EdgeInsets.fromLTRB(
-                  18,
-                  16,
-                  18,
-                  20 + MediaQuery.viewInsetsOf(context).bottom,
+                  AppSpacing.s18,
+                  AppSpacing.s16,
+                  AppSpacing.s18,
+                  AppSpacing.s20 + MediaQuery.viewInsetsOf(context).bottom,
                 ),
                 children: [
                   if (c.isGroup) ...[
@@ -85,7 +86,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                       controller: c.groupName,
                       style: AppText.body(16),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: AppSpacing.s16),
                   ],
                   NzTextField(
                     label: c.isGroup ? 'اسم مسؤول الحملة' : 'اسم النزيل',
@@ -93,7 +94,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                     controller: c.guestName,
                     style: AppText.body(16),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   NzTextField(
                     label: 'رقم الهوية / الجواز',
                     hint: 'A1234567',
@@ -102,7 +103,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                     textAlign: TextAlign.right,
                     style: AppText.num(16, weight: FontWeight.w500),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   NzTextField(
                     label: c.isGroup ? 'هاتف مسؤول الحملة' : 'رقم الهاتف',
                     hint: '07700000000',
@@ -112,7 +113,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                     textAlign: TextAlign.right,
                     style: AppText.num(16, weight: FontWeight.w500),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   Row(
                     children: [
                       Expanded(
@@ -122,7 +123,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                           onPicked: (d) => c.setDates(checkIn: d),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      SizedBox(width: AppSpacing.s10),
                       Expanded(
                         child: _DateField(
                           label: 'تاريخ الخروج',
@@ -132,23 +133,23 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   _peopleStepper(),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   _seg<int>(
                     'نظام الوجبات',
                     const [NzSegment(0, 'مع إفطار'), NzSegment(1, 'بدون')],
                     c.mealIncluded,
                     (v) => c.set(() => c.mealIncluded = v),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   _seg<int>(
                     'طريقة الدفع',
                     const [NzSegment(0, 'نقداً'), NzSegment(1, 'بطاقة')],
                     c.payByCard,
                     (v) => c.set(() => c.payByCard = v),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   _seg<PaymentTiming>(
                     'توقيت الدفع',
                     const [
@@ -160,7 +161,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                     (v) => c.set(() => c.timing = v),
                     fontSize: 13,
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   _seg<PriceBasis>(
                     'أساس حساب السعر',
                     const [
@@ -177,11 +178,11 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                       _rate.text = '${c.rate}';
                     },
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   _usdCard(q),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   _iqdCard(),
-                  const SizedBox(height: 16),
+                  SizedBox(height: AppSpacing.s16),
                   _calcCard(q),
                 ],
               ),
@@ -218,7 +219,12 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
 
   Widget _header() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 10, 18, 14),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.s18,
+        AppSpacing.s10,
+        AppSpacing.s18,
+        AppSpacing.s14,
+      ),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.line)),
       ),
@@ -227,15 +233,15 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
         children: [
           Center(
             child: Container(
-              width: 40,
-              height: 5,
+              width: 40.r,
+              height: 5.r,
               decoration: BoxDecoration(
                 color: AppColors.grabber,
-                borderRadius: BorderRadius.circular(99),
+                borderRadius: BorderRadius.circular(AppRadius.full),
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: AppSpacing.s10),
           Row(
             children: [
               Expanded(
@@ -253,26 +259,26 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
               NzIconButton(
                 icon: LucideIcons.x,
                 tooltip: 'إغلاق',
-                size: 40,
-                radius: 12,
-                iconSize: 17,
+                size: 40.r,
+                radius: AppRadius.r12,
+                iconSize: 17.r,
                 iconColor: AppColors.inkMuted,
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: AppSpacing.s10),
           Wrap(
-            spacing: 6,
-            runSpacing: 6,
+            spacing: AppSpacing.s6,
+            runSpacing: AppSpacing.s6,
             children: [
               for (final n in c.selected)
                 Container(
-                  height: 30,
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  height: 30.r,
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12),
                   decoration: BoxDecoration(
                     color: AppColors.goldTint,
-                    borderRadius: BorderRadius.circular(99),
+                    borderRadius: BorderRadius.circular(AppRadius.full),
                     border: Border.all(color: AppColors.goldBorder),
                   ),
                   child: Center(
@@ -296,8 +302,11 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
 
   Widget _peopleStepper() {
     return NzCard(
-      radius: 16,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      radius: AppRadius.r16,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s14,
+        vertical: AppSpacing.s12,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -329,7 +338,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
             onTap: () => c.changeHeads(-1),
           ),
           SizedBox(
-            width: 44,
+            width: 44.r,
             child: Text(
               '${c.heads}',
               textAlign: TextAlign.center,
@@ -358,7 +367,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(label, style: AppText.body(13, color: AppColors.inkMuted)),
-        const SizedBox(height: 7),
+        SizedBox(height: 7.r),
         NzSegmented<T>(
           segments: segs,
           selected: value,
@@ -374,23 +383,24 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
     TextEditingController? controller,
     String? hint,
     ValueChanged<String>? onChanged,
-    double height = 50,
+    double? height,
   }) {
+    final fieldHeight = height ?? 50.r;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(label, style: AppText.body(12.5, color: AppColors.inkMuted)),
-        const SizedBox(height: 6),
+        SizedBox(height: AppSpacing.s6),
         NzTextField(
           controller: controller,
           hint: hint,
-          height: height,
-          radius: 14,
+          height: fieldHeight,
+          radius: AppRadius.r14,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.right,
-          style: AppText.num(height < 50 ? 16 : 17),
+          style: AppText.num(fieldHeight < 50.r ? 16 : 17),
           onChanged: onChanged,
         ),
       ],
@@ -399,7 +409,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
 
   Widget _usdCard(BookingQuote q) {
     return NzCard(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(AppSpacing.s14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -407,11 +417,11 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
             children: [
               Expanded(child: _CardLabel('دولار')),
               Container(
-                height: 24,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                height: 24.r,
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.s10),
                 decoration: BoxDecoration(
                   color: AppColors.goldTint,
-                  borderRadius: BorderRadius.circular(99),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -421,7 +431,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -434,7 +444,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                   onChanged: (v) => c.setRate(_digits(v)),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: AppSpacing.s10),
               Expanded(
                 child: _Readout(
                   label: 'المستلم الآن',
@@ -453,16 +463,16 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
         ? 'سعر الليلة للشخص'
         : 'سعر الليلة للغرفة';
     return NzCard(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(AppSpacing.s14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _CardLabel('دينار'),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           Row(
             children: [
               Expanded(child: _moneyField(rateLabel, hint: '—')),
-              const SizedBox(width: 10),
+              SizedBox(width: AppSpacing.s10),
               Expanded(child: _moneyField('المستلم الآن', hint: '—')),
             ],
           ),
@@ -485,32 +495,32 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
     );
     const rule = NzDivider(color: AppColors.lineStrong);
     return NzCard(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(AppSpacing.s14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _CardLabel('الحساب والخصم · دولار'),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           line(
             c.basis == PriceBasis.perPerson
                 ? 'الأشخاص × الليالي'
                 : 'الغرف × الليالي',
             '${q.units} × ${q.nights}',
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           line('قبل الخصم', fmtNum(q.gross)),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           rule,
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           Text('الخصم', style: AppText.body(13, color: AppColors.inkMuted)),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             clipBehavior: Clip.none,
             child: Row(
               children: [
                 for (final (i, o) in c.discountOptions.indexed) ...[
-                  if (i > 0) const SizedBox(width: 8),
+                  if (i > 0) SizedBox(width: AppSpacing.s8),
                   NzChoicePill(
                     label: o.label,
                     selected: c.discount == o.type,
@@ -524,7 +534,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
             ),
           ),
           if (c.discount != DiscountType.none) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: AppSpacing.s12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -532,27 +542,27 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                   child: _moneyField(
                     c.discountLabel,
                     controller: _discount,
-                    height: 48,
+                    height: 48.r,
                     onChanged: (v) => c.set(() => c.discountValue = _digits(v)),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
                 Expanded(
                   child: _Readout(
                     label: 'قيمة الخصم',
                     value: q.discountAmount > 0
                         ? '−${fmtNum(q.discountAmount)}'
                         : '0',
-                    height: 48,
+                    height: 48.r,
                     highlight: true,
                   ),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           rule,
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -564,7 +574,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
               Text(fmtNum(q.total), style: AppText.num(22, height: 1)),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           line(
             'يُستوفى عند المغادرة',
             fmtNum(q.dueOnCheckout),
@@ -578,10 +588,10 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
   Widget _footer(BuildContext context) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-        18,
-        12,
-        18,
-        30 + MediaQuery.paddingOf(context).bottom,
+        AppSpacing.s18,
+        AppSpacing.s12,
+        AppSpacing.s18,
+        30.r + MediaQuery.paddingOf(context).bottom,
       ),
       decoration: const BoxDecoration(
         color: AppColors.sheet,
@@ -592,11 +602,11 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
           Expanded(
             child: NzOutlineButton(
               label: 'رجوع',
-              height: 54,
+              height: 54.r,
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: AppSpacing.s10),
           Expanded(
             flex: 2,
             child: NzPrimaryButton(
@@ -635,13 +645,14 @@ class _Readout extends StatelessWidget {
   const _Readout({
     required this.label,
     required this.value,
-    this.height = 50,
+    this._height,
     this.highlight = false,
   });
 
   final String label;
   final String value;
-  final double height;
+  final double? _height;
+  double get height => _height ?? 50.r;
   final bool highlight;
 
   @override
@@ -650,13 +661,13 @@ class _Readout extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(label, style: AppText.body(12.5, color: AppColors.inkMuted)),
-        const SizedBox(height: 6),
+        SizedBox(height: AppSpacing.s6),
         Container(
           height: height,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12),
           decoration: BoxDecoration(
             color: highlight ? AppColors.goldTint : AppColors.paper,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppRadius.r14),
             border: highlight ? null : Border.all(color: AppColors.line),
           ),
           alignment: AlignmentDirectional.centerStart,
@@ -693,7 +704,7 @@ class _DateField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(label, style: AppText.body(13, color: AppColors.inkMuted)),
-        const SizedBox(height: 7),
+        SizedBox(height: 7.r),
         GestureDetector(
           onTap: () async {
             final d = await showDatePicker(
@@ -705,11 +716,11 @@ class _DateField extends StatelessWidget {
             if (d != null) onPicked(d);
           },
           child: Container(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 52.r,
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12),
             decoration: BoxDecoration(
               color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.r16),
               border: Border.all(color: AppColors.lineStrong),
             ),
             child: Row(
@@ -722,10 +733,10 @@ class _DateField extends StatelessWidget {
                     style: AppText.num(15, weight: FontWeight.w500),
                   ),
                 ),
-                const SizedBox(width: 8),
-                const Icon(
+                SizedBox(width: AppSpacing.s8),
+                Icon(
                   LucideIcons.calendar,
-                  size: 16,
+                  size: 16.r,
                   color: AppColors.goldDeep,
                 ),
               ],

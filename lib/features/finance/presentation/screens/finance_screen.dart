@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -80,7 +81,12 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                         onRefresh: c.load,
                         child: ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
-                          padding: EdgeInsets.fromLTRB(16, 14, 16, navPad + 76),
+                          padding: EdgeInsets.fromLTRB(
+                            AppSpacing.s16,
+                            AppSpacing.s14,
+                            AppSpacing.s16,
+                            navPad + 76.r,
+                          ),
                           children: [
                             Row(
                               children: [
@@ -93,7 +99,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     iqd: totals.incomeIqd,
                                   ),
                                 ),
-                                const SizedBox(width: 10),
+                                SizedBox(width: AppSpacing.s10),
                                 Expanded(
                                   child: _TotalCard(
                                     icon: LucideIcons.trendingDown,
@@ -105,14 +111,14 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
+                            SizedBox(height: AppSpacing.s10),
                             NzCard(
                               color: AppColors.ink,
                               borderColor: null,
-                              radius: 18,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
+                              radius: AppRadius.r18,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppSpacing.s16,
+                                vertical: AppSpacing.s14,
                               ),
                               child: Row(
                                 children: [
@@ -132,7 +138,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     color: AppColors.onInk,
                                     unitColor: AppColors.onInkMuted,
                                   ),
-                                  const SizedBox(width: 12),
+                                  SizedBox(width: AppSpacing.s12),
                                   NzAmount(
                                     totals.netIqd,
                                     'دينار',
@@ -143,16 +149,16 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 14),
+                            SizedBox(height: AppSpacing.s14),
                             FinanceToolbar(
                               controller: c,
                               onFilter: () => showFinanceFilter(context, c),
                             ),
                             if (c.activeFilters.isNotEmpty) ...[
-                              const SizedBox(height: 10),
+                              SizedBox(height: AppSpacing.s10),
                               _ActiveChips(controller: c),
                             ],
-                            const SizedBox(height: 14),
+                            SizedBox(height: AppSpacing.s14),
                             Row(
                               children: [
                                 Expanded(
@@ -176,14 +182,14 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                 NzOutlineButton(
                                   label: 'تكبير',
                                   icon: LucideIcons.maximize2,
-                                  height: 40,
-                                  radius: 12,
+                                  height: 40.r,
+                                  radius: AppRadius.r12,
                                   fontSize: 13,
                                   onPressed: _expand,
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
+                            SizedBox(height: AppSpacing.s10),
                             TransactionsTable(
                               groups: c.groups,
                               onOpen: (t) => showTransactionDetail(
@@ -195,16 +201,16 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
                                     .can(Permissions.financeCreate),
                               ),
                             ),
-                            const SizedBox(height: 14),
+                            SizedBox(height: AppSpacing.s14),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(
+                                Icon(
                                   LucideIcons.info,
-                                  size: 13,
+                                  size: 13.r,
                                   color: AppColors.inkFaint,
                                 ),
-                                const SizedBox(width: 6),
+                                SizedBox(width: AppSpacing.s6),
                                 Text(
                                   'لا سعر صرف — كل عملة تُحسب على حدة.',
                                   style: AppText.body(
@@ -223,7 +229,7 @@ class _FinanceScreenState extends ConsumerState<FinanceScreen> {
               ),
               if (ref.watch(canProvider).can(Permissions.financeCreate))
                 PositionedDirectional(
-                  end: 16,
+                  end: AppSpacing.s16,
                   bottom: NzBottomNav.fabBottom(context),
                   child: NzFloatingButton(
                     label: 'حركة جديدة',
@@ -256,21 +262,24 @@ class _TotalCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 18,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      radius: AppRadius.r18,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s14,
+        vertical: AppSpacing.s12,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 15, color: iconColor),
-              const SizedBox(width: 6),
+              Icon(icon, size: 15.r, color: iconColor),
+              SizedBox(width: AppSpacing.s6),
               Text(label, style: AppText.body(12.5, color: AppColors.inkMuted)),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: AppSpacing.s6),
           NzAmount(usd, 'دولار', size: 20),
-          const SizedBox(height: 6),
+          SizedBox(height: AppSpacing.s6),
           NzAmount(iqd, 'دينار', size: 14, color: AppColors.goldDeep),
         ],
       ),
@@ -286,8 +295,8 @@ class _ActiveChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 6,
-      runSpacing: 6,
+      spacing: AppSpacing.s6,
+      runSpacing: AppSpacing.s6,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         for (final a in controller.activeFilters)
@@ -297,11 +306,14 @@ class _ActiveChips extends StatelessWidget {
             child: GestureDetector(
               onTap: a.clear,
               child: Container(
-                height: 34,
-                padding: const EdgeInsetsDirectional.only(start: 12, end: 8),
+                height: 34.r,
+                padding: EdgeInsetsDirectional.only(
+                  start: AppSpacing.s12,
+                  end: AppSpacing.s8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.goldTint,
-                  borderRadius: BorderRadius.circular(99),
+                  borderRadius: BorderRadius.circular(AppRadius.full),
                   border: Border.all(color: const Color(0x73B68235)),
                 ),
                 child: Row(
@@ -315,10 +327,10 @@ class _ActiveChips extends StatelessWidget {
                         color: AppColors.goldDarkest,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    const Icon(
+                    SizedBox(width: AppSpacing.s6),
+                    Icon(
                       LucideIcons.x,
-                      size: 13,
+                      size: 13.r,
                       color: AppColors.goldDarkest,
                     ),
                   ],
@@ -329,7 +341,10 @@ class _ActiveChips extends StatelessWidget {
         GestureDetector(
           onTap: controller.clearFilters,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.s6,
+              vertical: AppSpacing.s8,
+            ),
             child: Text(
               'مسح الكل',
               style: AppText.body(

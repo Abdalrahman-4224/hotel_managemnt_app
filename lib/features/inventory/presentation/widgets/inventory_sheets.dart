@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/inventory_item.dart';
@@ -21,7 +22,12 @@ Future<int?> showItemSheet(
   var add = suggested;
   return showNzSheet<int>(
     context,
-    padding: const EdgeInsets.fromLTRB(18, 10, 18, 32),
+    padding: EdgeInsets.fromLTRB(
+      AppSpacing.s18,
+      AppSpacing.s10,
+      AppSpacing.s18,
+      AppSpacing.s32,
+    ),
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setSheet) => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -36,7 +42,7 @@ Future<int?> showItemSheet(
                       categoryName,
                       style: AppText.body(12.5, color: AppColors.inkMuted),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: AppSpacing.s2),
                     Text(item.name, style: AppText.display(21)),
                   ],
                 ),
@@ -44,7 +50,7 @@ Future<int?> showItemSheet(
               StockLevelTag(item.level, small: false),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           Row(
             children: [
               for (final (i, (k, v)) in [
@@ -52,16 +58,19 @@ Future<int?> showItemSheet(
                 ('الحد الأدنى', '${item.minimum}'),
                 ('سعر الوحدة', item.unitPrice),
               ].indexed) ...[
-                if (i > 0) const SizedBox(width: 8),
+                if (i > 0) SizedBox(width: AppSpacing.s8),
                 Expanded(child: _NumFact(k, v)),
               ],
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           if (canReceive)
             NzCard(
-              radius: 16,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              radius: AppRadius.r16,
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.s14,
+                vertical: AppSpacing.s12,
+              ),
               child: Row(
                 children: [
                   Expanded(
@@ -76,7 +85,7 @@ Future<int?> showItemSheet(
                     onTap: () => setSheet(() => add = math.max(1, add - 1)),
                   ),
                   SizedBox(
-                    width: 48,
+                    width: 48.r,
                     child: Text(
                       '$add',
                       textAlign: TextAlign.center,
@@ -92,7 +101,7 @@ Future<int?> showItemSheet(
                 ],
               ),
             ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           Row(
             children: [
               Expanded(
@@ -102,12 +111,12 @@ Future<int?> showItemSheet(
                 ),
               ),
               if (canReceive) ...[
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
                 Expanded(
                   flex: 2,
                   child: NzPrimaryButton(
                     label: 'إدخال $add إلى المخزن',
-                    height: 52,
+                    height: 52.r,
                     fontSize: 15,
                     onPressed: () => Navigator.of(ctx).pop(add),
                   ),
@@ -130,13 +139,16 @@ class _NumFact extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 14,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      radius: AppRadius.r14,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s10,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppText.body(12, color: AppColors.inkMuted)),
-          const SizedBox(height: 3),
+          SizedBox(height: AppSpacing.s3),
           Text(value, style: AppText.num(16, height: 1.2)),
         ],
       ),
@@ -190,10 +202,10 @@ Future<NewInventoryItem?> showNewItemSheet(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text('القسم', style: AppText.body(13, color: AppColors.inkMuted)),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.s8),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSpacing.s8,
+            runSpacing: AppSpacing.s8,
             children: [
               for (final c in categories)
                 NzChoicePill(
@@ -207,12 +219,12 @@ Future<NewInventoryItem?> showNewItemSheet(
             ],
           ),
           if (d.category != null) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: AppSpacing.s16),
             Text(
               'نوع المنتج — من قائمة مدير الفندق',
               style: AppText.body(13, color: AppColors.inkMuted),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: AppSpacing.s8),
             NzGrid(
               columns: 2,
               children: [
@@ -227,21 +239,24 @@ Future<NewInventoryItem?> showNewItemSheet(
             ),
           ],
           if (d.type != null) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: AppSpacing.s16),
             Row(
               children: [
                 Expanded(child: _QtyField('الكمية الابتدائية', d.qty)),
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
                 Expanded(child: _QtyField('الحد الأدنى', d.min)),
               ],
             ),
           ],
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.s14,
+              vertical: AppSpacing.s12,
+            ),
             decoration: BoxDecoration(
               color: AppColors.goldTint,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppRadius.r16),
               border: Border.all(color: AppColors.goldBorderSoft),
             ),
             child: Text(
@@ -263,11 +278,11 @@ Future<NewInventoryItem?> showNewItemSheet(
           Expanded(
             child: NzOutlineButton(
               label: 'إلغاء',
-              height: 54,
+              height: 54.r,
               onPressed: () => Navigator.of(ctx).pop(),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: AppSpacing.s10),
           Expanded(
             flex: 2,
             child: NzPrimaryButton(
@@ -305,15 +320,18 @@ class _TypeOption extends StatelessWidget {
     return GestureDetector(
       onTap: used ? null : onTap,
       child: Container(
-        constraints: const BoxConstraints(minHeight: 58),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        constraints: BoxConstraints(minHeight: 58.r),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.s12,
+          vertical: AppSpacing.s8,
+        ),
         decoration: BoxDecoration(
           color: used
               ? AppColors.inert
               : selected
               ? AppColors.goldTint
               : AppColors.card,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppRadius.r14),
           border: Border.all(
             color: selected ? AppColors.goldDeep : AppColors.lineStrong,
             width: selected ? 1.5 : 1,
@@ -327,7 +345,7 @@ class _TypeOption extends StatelessWidget {
               label,
               style: AppText.body(14.5, weight: FontWeight.w500, color: fg),
             ),
-            const SizedBox(height: 3),
+            SizedBox(height: AppSpacing.s3),
             Text(
               used ? 'موجودة في المخزن' : 'متاحة للإضافة',
               style: AppText.body(11.5, color: fg.withValues(alpha: .8)),
@@ -350,8 +368,8 @@ class _QtyField extends StatelessWidget {
     return NzTextField(
       label: label,
       controller: controller,
-      height: 50,
-      radius: 14,
+      height: 50.r,
+      radius: AppRadius.r14,
       keyboardType: TextInputType.number,
       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
       textDirection: TextDirection.ltr,

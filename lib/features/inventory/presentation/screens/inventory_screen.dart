@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/errors/app_exception.dart';
@@ -83,20 +84,25 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                     child: ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.only(
-                        top: 14,
-                        bottom: NzBottomNav.bodyPadding(context) + 76,
+                        top: AppSpacing.s14,
+                        bottom: NzBottomNav.bodyPadding(context) + 76.r,
                       ),
                       children: [
                         if (low.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                            padding: EdgeInsets.fromLTRB(
+                              AppSpacing.s16,
+                              0,
+                              AppSpacing.s16,
+                              AppSpacing.s14,
+                            ),
                             child: _LowStockBanner(
                               items: low,
                               onShow: () => setState(() => _filter = 'low'),
                             ),
                           ),
                         NzPillScroller(
-                          gap: 6,
+                          gap: AppSpacing.s6,
                           children: [
                             for (final (k, l) in filters)
                               NzChoicePill(
@@ -104,22 +110,24 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
                                 count:
                                     '${_items.where((i) => _matches(i, k)).length}',
                                 selected: _filter == k,
-                                height: 38,
-                                horizontalPadding: 12,
+                                height: 38.r,
+                                horizontalPadding: AppSpacing.s12,
                                 fontSize: 13,
                                 onTap: () => setState(() => _filter = k),
                               ),
                           ],
                         ),
-                        const SizedBox(height: 14),
+                        SizedBox(height: AppSpacing.s14),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.s16,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (rows.isNotEmpty) ...[
                                 InventoryTable(items: rows, onOpen: _openItem),
-                                const SizedBox(height: 14),
+                                SizedBox(height: AppSpacing.s14),
                               ],
                               Text(
                                 'كل صرف مرتبط بمهمة، ويُخصم من الرصيد لحظة إتمامها.',
@@ -142,7 +150,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> {
           ),
           if (ref.watch(canProvider).can(Permissions.inventoryCreate))
             PositionedDirectional(
-              end: 16,
+              end: AppSpacing.s16,
               bottom: NzBottomNav.fabBottom(context),
               child: NzFloatingButton(
                 label: 'مادة جديدة',
@@ -202,21 +210,21 @@ class _LowStockBanner extends StatelessWidget {
       child: GestureDetector(
         onTap: onShow,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 44),
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          constraints: BoxConstraints(minHeight: 44.r),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12),
           decoration: BoxDecoration(
             color: AppColors.goldTint,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppRadius.r12),
             border: Border.all(color: const Color(0x66B68235)),
           ),
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 LucideIcons.triangleAlert,
-                size: 16,
+                size: 16.r,
                 color: AppColors.goldDeep,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: AppSpacing.s8),
               Expanded(
                 child: Text.rich(
                   TextSpan(
@@ -235,7 +243,7 @@ class _LowStockBanner extends StatelessWidget {
                   style: style,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: AppSpacing.s8),
               Text(
                 'عرض',
                 style: style.copyWith(

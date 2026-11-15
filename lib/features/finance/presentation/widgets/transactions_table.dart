@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -28,7 +29,7 @@ class TransactionsTable extends StatelessWidget {
       );
     }
     return NzCard(
-      radius: 18,
+      radius: AppRadius.r18,
       shadow: AppShadows.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -58,7 +59,10 @@ class _GroupHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s14,
+        vertical: AppSpacing.s8,
+      ),
       decoration: BoxDecoration(
         color: AppColors.paper,
         border: Border(
@@ -102,17 +106,20 @@ class TransactionRow extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 64),
+          constraints: BoxConstraints(minHeight: 64.r),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.s14,
+              vertical: AppSpacing.s10,
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  width: 36.r,
+                  height: 36.r,
                   decoration: BoxDecoration(
                     color: inc ? AppColors.goldTint : AppColors.inert,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppRadius.r12),
                     border: Border.all(
                       color: inc
                           ? AppColors.goldBorderSoft
@@ -121,11 +128,11 @@ class TransactionRow extends StatelessWidget {
                   ),
                   child: Icon(
                     inc ? LucideIcons.arrowDownLeft : LucideIcons.arrowUpRight,
-                    size: 17,
+                    size: 17.r,
                     color: inc ? AppColors.goldDeep : AppColors.inkMuted,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +143,7 @@ class TransactionRow extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: AppText.body(14.5, weight: FontWeight.w600),
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: AppSpacing.s3),
                       Text(
                         '${tx.staff} · ${tx.method.label}',
                         maxLines: 1,
@@ -146,7 +153,7 @@ class TransactionRow extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: AppSpacing.s12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -165,10 +172,10 @@ class TransactionRow extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(width: 12),
-                const Icon(
+                SizedBox(width: AppSpacing.s12),
+                Icon(
                   LucideIcons.chevronLeft,
-                  size: 15,
+                  size: 15.r,
                   color: AppColors.chevron,
                 ),
               ],
@@ -215,12 +222,12 @@ class FinanceToolbar extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: 8),
+        SizedBox(width: AppSpacing.s8),
         NzIconButton(
           icon: LucideIcons.slidersHorizontal,
           tooltip: active > 0 ? 'فلترة — $active فلاتر مفعّلة' : 'فلترة',
-          size: 52,
-          radius: 16,
+          size: 52.r,
+          radius: AppRadius.r16,
           background: active > 0 ? AppColors.goldTint : AppColors.card,
           borderColor: active > 0 ? AppColors.goldDeep : AppColors.lineStrong,
           borderWidth: active > 0 ? 1.5 : 1,

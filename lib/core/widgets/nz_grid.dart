@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_sizes.dart';
+
 /// Grid laid out as rows of [columns] equal cells.
 class NzGrid extends StatelessWidget {
   const NzGrid({
     super.key,
     required this.children,
     this.columns = 4,
-    this.spacing = 8,
+    this._spacing,
   });
 
   final List<Widget> children;
   final int columns;
-  final double spacing;
+  final double? _spacing;
+  double get spacing => _spacing ?? AppSpacing.s8;
 
   @override
   Widget build(BuildContext context) {

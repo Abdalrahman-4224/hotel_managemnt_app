@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/room.dart';
@@ -18,11 +19,11 @@ class RoomStatusDot extends StatelessWidget {
       RoomStatus.maintenance => (const Color(0xFFCFCBC6), null),
     };
     return Container(
-      width: 12,
-      height: 12,
+      width: 12.r,
+      height: 12.r,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(5.r),
         border: border == null ? null : Border.all(color: border),
       ),
     );
@@ -80,11 +81,14 @@ class RoomTile extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 76),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          constraints: BoxConstraints(minHeight: 76.r),
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.s4,
+            vertical: AppSpacing.s8,
+          ),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.r16),
             border: border == null ? null : Border.all(color: border),
             boxShadow: shadow,
           ),
@@ -92,7 +96,7 @@ class RoomTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(room.number, style: AppText.num(17, color: fg, height: 1)),
-              const SizedBox(height: 6),
+              SizedBox(height: AppSpacing.s6),
               Text(
                 status == RoomStatus.free ? room.typeName : status.label,
                 maxLines: 1,
@@ -126,11 +130,11 @@ class RoomStatusTag extends StatelessWidget {
       RoomStatus.free => (AppColors.card, AppColors.ink, AppColors.lineStrong),
     };
     return Container(
-      height: 28,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: 28.r,
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.s12),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(99),
+        borderRadius: BorderRadius.circular(AppRadius.full),
         border: border == null ? null : Border.all(color: border),
       ),
       alignment: Alignment.center,

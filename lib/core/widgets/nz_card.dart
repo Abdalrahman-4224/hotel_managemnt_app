@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_sizes.dart';
 
 /// White rounded card with the design's hairline border.
 class NzCard extends StatelessWidget {
@@ -8,7 +10,7 @@ class NzCard extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = EdgeInsets.zero,
-    this.radius = 20,
+    this._radius,
     this.color = AppColors.card,
     this.borderColor = AppColors.line,
     this.borderWidth = 1,
@@ -19,7 +21,8 @@ class NzCard extends StatelessWidget {
 
   final Widget child;
   final EdgeInsetsGeometry padding;
-  final double radius;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r20;
   final Color color;
   final Color? borderColor;
   final double borderWidth;
@@ -59,14 +62,15 @@ class NzInkCard extends StatelessWidget {
   const NzInkCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(18),
-    this.radius = 24,
+    this.padding,
+    this._radius,
     this.shadow = AppShadows.ink,
   });
 
   final Widget child;
-  final EdgeInsetsGeometry padding;
-  final double radius;
+  final EdgeInsetsGeometry? padding;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r24;
   final List<BoxShadow>? shadow;
 
   @override
@@ -76,7 +80,7 @@ class NzInkCard extends StatelessWidget {
       borderColor: null,
       radius: radius,
       shadow: shadow,
-      padding: padding,
+      padding: padding ?? EdgeInsets.all(AppSpacing.s18),
       child: DefaultTextStyle.merge(
         style: const TextStyle(color: AppColors.onInk),
         child: child,
@@ -100,12 +104,13 @@ class NzListCard extends StatelessWidget {
   const NzListCard({
     super.key,
     required this.children,
-    this.radius = 20,
+    this._radius,
     this.shadow,
   });
 
   final List<Widget> children;
-  final double radius;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r20;
   final List<BoxShadow>? shadow;
 
   @override
@@ -131,21 +136,27 @@ class NzDashedBox extends StatelessWidget {
   const NzDashedBox({
     super.key,
     required this.child,
-    this.radius = 18,
+    this._radius,
     this.color = AppColors.lineStrong,
-    this.padding = const EdgeInsets.symmetric(vertical: 36, horizontal: 12),
+    this.padding,
   });
 
   final Widget child;
-  final double radius;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r18;
   final Color color;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       painter: _DashedRRectPainter(radius: radius, color: color),
-      child: Padding(padding: padding, child: child),
+      child: Padding(
+        padding:
+            padding ??
+            EdgeInsets.symmetric(vertical: 36.r, horizontal: AppSpacing.s12),
+        child: child,
+      ),
     );
   }
 }

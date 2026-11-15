@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/utils/formatters.dart';
@@ -32,9 +33,9 @@ class CampaignCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = campaign;
     return NzCard(
-      radius: 22,
+      radius: AppRadius.r22,
       shadow: AppShadows.card,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(AppSpacing.s16),
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -50,7 +51,7 @@ class CampaignCard extends StatelessWidget {
                       c.name,
                       style: AppText.body(16, weight: FontWeight.w600),
                     ),
-                    const SizedBox(height: 3),
+                    SizedBox(height: AppSpacing.s3),
                     Text.rich(
                       TextSpan(
                         children: [
@@ -71,21 +72,21 @@ class CampaignCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: AppSpacing.s12),
               CampaignStatusTag(c.status),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           Row(
             children: [
               Expanded(child: _MiniStat('الأفراد', '${c.heads}')),
-              const SizedBox(width: 8),
+              SizedBox(width: AppSpacing.s8),
               Expanded(child: _MiniStat('الغرف', '${c.rooms.length}')),
-              const SizedBox(width: 8),
+              SizedBox(width: AppSpacing.s8),
               Expanded(child: _MiniStat('الليالي', '${c.nights}')),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -99,26 +100,22 @@ class CampaignCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          NzProgressBar(value: (c.paidPercent / 100).clamp(0, 1), height: 6),
-          const SizedBox(height: 6),
+          SizedBox(height: AppSpacing.s6),
+          NzProgressBar(value: (c.paidPercent / 100).clamp(0, 1), height: 6.r),
+          SizedBox(height: AppSpacing.s6),
           Text(
             c.paidPercent >= 100
                 ? 'مسدّدة بالكامل'
                 : 'المتبقي ${fmtNum(c.due)} \$',
             style: AppText.body(12.5, color: AppColors.goldDeep),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           const NzDivider(),
-          const SizedBox(height: 10),
+          SizedBox(height: AppSpacing.s10),
           Row(
             children: [
-              const Icon(
-                LucideIcons.calendar,
-                size: 14,
-                color: AppColors.inkMuted,
-              ),
-              const SizedBox(width: 6),
+              Icon(LucideIcons.calendar, size: 14.r, color: AppColors.inkMuted),
+              SizedBox(width: AppSpacing.s6),
               Text(
                 c.dateRange,
                 style: AppText.num(
@@ -144,16 +141,19 @@ class _MiniStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s10,
+        vertical: AppSpacing.s8,
+      ),
       decoration: BoxDecoration(
         color: AppColors.paper,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppRadius.r12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppText.body(11.5, color: AppColors.inkMuted)),
-          const SizedBox(height: 3),
+          SizedBox(height: AppSpacing.s3),
           Text(value, style: AppText.num(17, height: 1)),
         ],
       ),

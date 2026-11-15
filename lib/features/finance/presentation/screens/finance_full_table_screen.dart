@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -35,7 +36,7 @@ class FinanceFullTableScreen extends StatelessWidget {
                 NzIconButton(
                   icon: LucideIcons.minimize2,
                   tooltip: 'تصغير الجدول',
-                  iconSize: 18,
+                  iconSize: 18.r,
                   iconColor: AppColors.goldDeep,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -48,10 +49,10 @@ class FinanceFullTableScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 padding: EdgeInsets.fromLTRB(
-                  16,
-                  14,
-                  16,
-                  30 + MediaQuery.paddingOf(context).bottom,
+                  AppSpacing.s16,
+                  AppSpacing.s14,
+                  AppSpacing.s16,
+                  30.r + MediaQuery.paddingOf(context).bottom,
                 ),
                 children: [
                   TransactionsTable(

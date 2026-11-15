@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -23,14 +24,14 @@ class SectionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 20,
+      radius: AppRadius.r20,
       color: featured ? AppColors.ink : AppColors.card,
       borderColor: featured ? AppColors.ink : AppColors.line,
       shadow: AppShadows.card,
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(AppSpacing.s14),
       onTap: onTap,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 88),
+        constraints: BoxConstraints(minHeight: 88.r),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -46,12 +47,12 @@ class SectionTile extends StatelessWidget {
                 ),
                 Icon(
                   LucideIcons.chevronLeft,
-                  size: 16,
+                  size: 16.r,
                   color: featured ? AppColors.onInkMuted : AppColors.inkMuted,
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: AppSpacing.s10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -64,7 +65,7 @@ class SectionTile extends StatelessWidget {
                     height: 1.35,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: AppSpacing.s4),
                 Text(
                   subtitle,
                   style: AppText.body(

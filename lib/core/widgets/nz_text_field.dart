@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_text.dart';
+import '../theme/app_sizes.dart';
 
 /// Labelled input with the design's 16px rounded hairline box.
 /// The border turns gold while focused.
@@ -18,8 +20,8 @@ class NzTextField extends StatefulWidget {
     this.textDirection,
     this.textAlign = TextAlign.start,
     this.style,
-    this.height = 52,
-    this.radius = 16,
+    this._height,
+    this._radius,
     this.prefix,
     this.autofillHints,
     this.maxLines = 1,
@@ -36,8 +38,10 @@ class NzTextField extends StatefulWidget {
   final TextDirection? textDirection;
   final TextAlign textAlign;
   final TextStyle? style;
-  final double height;
-  final double radius;
+  final double? _height;
+  double get height => _height ?? 52.r;
+  final double? _radius;
+  double get radius => _radius ?? AppRadius.r16;
 
   /// Widget glued to the start of the field (e.g. the +964 country box).
   final Widget? prefix;
@@ -102,8 +106,8 @@ class _NzTextFieldState extends State<NzTextField> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: multiline ? 12 : 0,
+                horizontal: AppSpacing.s14,
+                vertical: multiline ? AppSpacing.s12 : 0,
               ),
               child: Align(
                 alignment: multiline
@@ -140,7 +144,7 @@ class _NzTextFieldState extends State<NzTextField> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(widget.label!, style: AppText.body(13, color: AppColors.inkMuted)),
-        const SizedBox(height: 6),
+        SizedBox(height: AppSpacing.s6),
         field,
       ],
     );
