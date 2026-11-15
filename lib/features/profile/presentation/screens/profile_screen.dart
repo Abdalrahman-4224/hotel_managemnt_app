@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../authentication/domain/entities/auth_user.dart';
+import '../../../authentication/domain/entities/permissions.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
-import '../../data/data_sources/profile_local_data_source.dart';
+import '../../../authentication/presentation/controllers/biometric_controller.dart';
+import '../../../authentication/presentation/controllers/permissions_controller.dart';
 import '../../domain/entities/profile.dart';
-import '../controllers/subscription_controller.dart';
+import '../controllers/hotel_controller.dart';
+import '../widgets/account_sheets.dart';
 import '../widgets/settings_row.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -18,10 +23,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final _source = const ProfileLocalDataSource();
-  var _notifications = true;
-  var _biometric = false;
-
   /// The signed-in user as the profile card shows them.
   UserProfile _profile(AuthUser? u) {
     final name = u?.fullName ?? '';
@@ -38,143 +39,135 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  /// Off: forget the saved login. On: confirm the password and a fingerprint.
+  Future<void> _setBiometric(bool on) async {
+    if (on) {
+      await showEnableBiometricSheet(context);
+      return;
+    }
+    try {
+      await ref.read(authControllerProvider.notifier).disableBiometric();
+      ref.invalidate(biometricStatusProvider);
+      if (mounted) showNzToast(context, 'تم إيقاف الدخول بالبصمة');
+    } catch (error) {
+      if (mounted) showNzToast(context, errorText(error));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = _profile(ref.watch(authControllerProvider).user);
-    final plan = ref.watch(subscriptionProvider);
+    final hotel = ref.watch(currentHotelProvider).value;
+    final biometric = ref.watch(biometricStatusProvider).value;
+    // The subscription is only fetched for roles allowed to see it.
+    final canSeePlan = ref.watch(canProvider).can(Permissions.subscriptionView);
+    final plan = canSeePlan ? ref.watch(subscriptionProvider) : null;
+
     return Scaffold(
       body: Column(
         children: [
           NzPageHeader(
-            subtitle: 'الحساب والاشتراك',
+            subtitle: 'الحساب والأمان',
             title: 'حسابي',
             actions: [
               NzOutlineButton(
                 label: 'تعديل',
-                height: 44,
-                radius: 14,
+                height: 44.r,
+                radius: AppRadius.r14,
                 fontSize: 14,
-                onPressed: () {},
+                onPressed: () => showEditProfileSheet(context),
               ),
             ],
           ),
           Expanded(
             child: ListView(
               padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
+                AppSpacing.s16,
+                AppSpacing.s16,
+                AppSpacing.s16,
                 NzBottomNav.bodyPadding(context),
               ),
               children: [
                 _UserCard(user: user),
-                const SizedBox(height: 18),
-                if (plan.hasValue)
-                  _SubscriptionCard(
-                    plan: plan.value!,
-                    onRenew: () => _openRenew(context),
-                  )
-                else if (plan.hasError)
-                  NzStateMessage.error(
-                    plan.error,
-                    onRetry: () => ref.invalidate(subscriptionProvider),
-                  )
-                else
-                  const Center(child: CircularProgressIndicator()),
-                const SizedBox(height: 18),
+                if (plan != null) ...[
+                  SizedBox(height: AppSpacing.s18),
+                  if (plan.hasValue)
+                    _SubscriptionCard(plan: plan.value!)
+                  else if (plan.hasError)
+                    NzStateMessage.error(
+                      plan.error,
+                      onRetry: () => ref.invalidate(subscriptionProvider),
+                    )
+                  else
+                    const Center(child: CircularProgressIndicator()),
+                ],
+                SizedBox(height: AppSpacing.s18),
                 const NzGroupLabel('الفندق'),
-                const SizedBox(height: 8),
+                SizedBox(height: AppSpacing.s8),
                 NzListCard(
                   children: [
                     SettingsRow(
                       icon: LucideIcons.building,
-                      title: plan.value?.hotelName ?? '—',
-                      subtitle: '${plan.value?.usage.first.used ?? 0} غرفة',
+                      title: hotel?.name ?? '—',
+                      subtitle: '${hotel?.roomsCount ?? 0} غرفة',
                     ),
                     const SettingsRow(
-                      icon: LucideIcons.receipt,
-                      title: 'بيانات الفوترة والضريبة',
-                    ),
-                    SettingsRow(
                       icon: LucideIcons.coins,
-                      title: 'العملة الافتراضية',
+                      title: 'عملة الحجوزات',
                       value: 'دولار',
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: AppSpacing.s18),
                 const NzGroupLabel('الحساب والأمان'),
-                const SizedBox(height: 8),
+                SizedBox(height: AppSpacing.s8),
                 NzListCard(
                   children: [
-                    const SettingsRow(
+                    SettingsRow(
                       icon: LucideIcons.userRound,
                       title: 'المعلومات الشخصية',
+                      subtitle: 'الاسم والبريد الإلكتروني',
+                      onTap: () => showEditProfileSheet(context),
                     ),
-                    const SettingsRow(
+                    SettingsRow(
                       icon: LucideIcons.lock,
                       title: 'تغيير كلمة المرور',
+                      onTap: () => showChangePasswordSheet(context),
                     ),
+                    // Read-only: only the hotel manager may change a phone.
                     SettingsRow(
                       icon: LucideIcons.smartphone,
                       title: 'رقم الهاتف',
+                      subtitle: 'لا يمكن تغييره، راجع مدير الفندق',
                       value: user.maskedPhone,
                     ),
-                    const SettingsRow(
-                      icon: LucideIcons.monitor,
-                      title: 'الأجهزة المتصلة',
-                      value: '2',
-                    ),
+                    // Only on phones with a fingerprint sensor set up.
+                    if (biometric != null && biometric.available)
+                      SettingsRow(
+                        icon: LucideIcons.fingerprint,
+                        title: 'الدخول بالبصمة',
+                        subtitle: 'بدل كلمة المرور على هذا الجهاز',
+                        trailing: NzSwitch(
+                          value: biometric.enabled,
+                          semanticLabel: 'الدخول بالبصمة',
+                          onChanged: _setBiometric,
+                        ),
+                      ),
                   ],
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: AppSpacing.s18),
                 const NzGroupLabel('التفضيلات'),
-                const SizedBox(height: 8),
-                NzListCard(
+                SizedBox(height: AppSpacing.s8),
+                const NzListCard(
                   children: [
                     SettingsRow(
-                      icon: LucideIcons.bell,
-                      title: 'الإشعارات',
-                      subtitle: 'الحجوزات والمهام والمخزن',
-                      trailing: NzSwitch(
-                        value: _notifications,
-                        semanticLabel: 'الإشعارات',
-                        onChanged: (v) => setState(() => _notifications = v),
-                      ),
-                    ),
-                    SettingsRow(
-                      icon: LucideIcons.fingerprint,
-                      title: 'الدخول بالبصمة',
-                      subtitle: 'بدل رمز التحقق',
-                      trailing: NzSwitch(
-                        value: _biometric,
-                        semanticLabel: 'الدخول بالبصمة',
-                        onChanged: (v) => setState(() => _biometric = v),
-                      ),
-                    ),
-                    const SettingsRow(
                       icon: LucideIcons.globe,
                       title: 'اللغة',
                       value: 'العربية',
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-                const NzGroupLabel('الدعم'),
-                const SizedBox(height: 8),
-                const NzListCard(
-                  children: [
-                    SettingsRow(
-                      icon: LucideIcons.circleQuestionMark,
-                      title: 'المساعدة والدعم الفني',
-                    ),
-                    SettingsRow(
-                      icon: LucideIcons.fileText,
-                      title: 'الشروط وسياسة الخصوصية',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
+                SizedBox(height: AppSpacing.s18),
                 NzOutlineButton(
                   label: 'تسجيل الخروج',
                   foreground: AppColors.danger,
@@ -184,90 +177,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   onPressed: () =>
                       ref.read(authControllerProvider.notifier).signOut(),
                 ),
-                const SizedBox(height: 18),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      const TextSpan(text: 'نُزُل · الإصدار '),
-                      TextSpan(
-                        text: '2.4.0',
-                        style: AppText.num(
-                          12,
-                          weight: FontWeight.w400,
-                          color: AppColors.inkFaint,
-                        ),
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
-                  style: AppText.body(12, color: AppColors.inkFaint),
-                ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _openRenew(BuildContext context) {
-    final terms = _source.getRenewalTerms();
-    var selected = 1;
-    showNzSheet<void>(
-      context,
-      background: AppColors.paper,
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 34),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const NzSheetTitle(
-              'تجديد الاشتراك',
-              subtitle: 'الباقة الاحترافية · يبدأ التجديد من تاريخ الانتهاء',
-            ),
-            const SizedBox(height: 14),
-            for (var i = 0; i < terms.length; i++) ...[
-              if (i > 0) const SizedBox(height: 8),
-              NzOptionTile(
-                selected: selected == i,
-                onTap: () => setSheet(() => selected = i),
-                child: Row(
-                  children: [
-                    NzRadioDot(selected: selected == i),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            terms[i].label,
-                            style: AppText.body(15, weight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            terms[i].note,
-                            style: AppText.body(
-                              12.5,
-                              color: AppColors.inkMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Text(terms[i].price, style: AppText.num(17, height: 1)),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 14),
-            NzPrimaryButton(
-              label: 'متابعة الدفع · ${terms[selected].price}',
-              height: 52,
-              fontSize: 15,
-              onPressed: () => Navigator.of(ctx).pop(),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -281,23 +194,23 @@ class _UserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 22,
-      padding: const EdgeInsets.all(16),
+      radius: AppRadius.r22,
+      padding: EdgeInsets.all(AppSpacing.s16),
       child: Row(
         children: [
-          NzInitialAvatar(user.initial, size: 60, fontSize: 24, serif: true),
-          const SizedBox(width: 14),
+          NzInitialAvatar(user.initial, size: 60.r, fontSize: 24, serif: true),
+          SizedBox(width: AppSpacing.s14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(user.name, style: AppText.display(18, height: 1.35)),
-                const SizedBox(height: 3),
+                SizedBox(height: AppSpacing.s3),
                 Text(
                   user.role,
                   style: AppText.body(13, color: AppColors.inkMuted),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: AppSpacing.s3),
                 Text(
                   user.phone,
                   textDirection: TextDirection.ltr,
@@ -318,10 +231,9 @@ class _UserCard extends StatelessWidget {
 }
 
 class _SubscriptionCard extends StatelessWidget {
-  const _SubscriptionCard({required this.plan, required this.onRenew});
+  const _SubscriptionCard({required this.plan});
 
   final Subscription plan;
-  final VoidCallback onRenew;
 
   @override
   Widget build(BuildContext context) {
@@ -341,7 +253,7 @@ class _SubscriptionCard extends StatelessWidget {
                       'الاشتراك',
                       style: AppText.body(12.5, color: AppColors.onInkMuted),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: AppSpacing.s4),
                     Text(
                       plan.name,
                       style: AppText.display(20, color: AppColors.onInk),
@@ -352,7 +264,7 @@ class _SubscriptionCard extends StatelessWidget {
               NzTag(plan.status, tone: NzTagTone.solidGold),
             ],
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -384,53 +296,24 @@ class _SubscriptionCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.s8),
           NzProgressBar(
             value: plan.daysLeft / plan.totalDays,
-            height: 6,
+            height: 6.r,
             track: AppColors.onInkTrack,
             fill: AppColors.amber,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.s8),
           Text(plan.note, style: AppText.body(12, color: AppColors.onInkMuted)),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           const NzDivider(color: AppColors.onInkLine),
-          const SizedBox(height: 14),
+          SizedBox(height: AppSpacing.s14),
           Row(
             children: [
               for (var i = 0; i < plan.usage.length; i++) ...[
-                if (i > 0) const SizedBox(width: 12),
+                if (i > 0) SizedBox(width: AppSpacing.s12),
                 Expanded(child: _UsageMeter(plan.usage[i])),
               ],
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: NzPrimaryButton(
-                  label: 'تجديد الاشتراك',
-                  background: AppColors.gold,
-                  foreground: AppColors.ink,
-                  height: 48,
-                  radius: 14,
-                  fontSize: 14.5,
-                  onPressed: onRenew,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: NzOutlineButton(
-                  label: 'سجل الدفعات',
-                  background: Colors.transparent,
-                  foreground: AppColors.onInk,
-                  borderColor: AppColors.onInkBorder,
-                  height: 48,
-                  radius: 14,
-                  fontSize: 14.5,
-                  onPressed: () {},
-                ),
-              ),
             ],
           ),
         ],
@@ -458,7 +341,7 @@ class _UsageMeter extends StatelessWidget {
                 usage.label,
                 style: AppText.body(12.5, color: AppColors.onInkMuted),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: AppSpacing.s6),
               Text(
                 '${usage.used} / ${usage.limit}',
                 textDirection: TextDirection.ltr,
@@ -471,7 +354,7 @@ class _UsageMeter extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: AppSpacing.s6),
         NzProgressBar(
           value: usage.ratio,
           track: AppColors.onInkTrack,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../../core/widgets/widgets.dart';
 
@@ -97,7 +98,7 @@ class OtpInputState extends State<OtpInput> {
       child: Row(
         children: [
           for (var i = 0; i < widget.length; i++) ...[
-            if (i > 0) const SizedBox(width: 8),
+            if (i > 0) SizedBox(width: AppSpacing.s8),
             Expanded(child: _cell(i, firstEmpty)),
           ],
         ],
@@ -110,14 +111,14 @@ class OtpInputState extends State<OtpInput> {
     final active = i == firstEmpty;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      height: 58,
+      height: 58.r,
       decoration: BoxDecoration(
         color: filled
             ? AppColors.goldTint
             : active
             ? Colors.white
             : AppColors.paper,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(15.r),
         border: Border.all(
           color: filled
               ? AppColors.goldDeep

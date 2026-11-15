@@ -11,8 +11,14 @@ class ProfileRepositoryImpl implements ProfileRepository {
   ProfileRepositoryImpl(this.dataSource);
 
   @override
-  Future<Subscription> getSubscription() async {
+  Future<Hotel> getHotel() async {
     final json = await dataSource.fetchCurrentHotel();
+    return HotelModel.hotelFromJson(json);
+  }
+
+  @override
+  Future<Subscription> getSubscription() async {
+    final json = await dataSource.fetchSubscription();
     return HotelModel.subscriptionFromJson(json);
   }
 }

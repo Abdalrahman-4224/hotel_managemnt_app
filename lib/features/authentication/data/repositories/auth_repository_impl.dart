@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/api/api_providers.dart';
@@ -9,25 +11,27 @@ import '../../domain/entities/auth_user.dart';
 import '../../domain/entities/permissions.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../data_sources/auth_remote_data_source.dart';
+import '../data_sources/biometric_data_source.dart';
 import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final TokenStorage tokenStorage;
+  final BiometricDataSource biometric;
 
-  AuthRepositoryImpl(this.remoteDataSource, this.tokenStorage);
+  AuthRepositoryImpl(this.remoteDataSource, this.tokenStorage, this.biometric);
 
   @override
   Future<AuthUser> signIn(String username, String password) async {
-    final data = await remoteDataSource.signIn(username, password);
+    return _saveSession(await remoteDataSource.signIn(username, password));
+  }
 
-    final token = data['token'] as String;
+  /// Saves a `{ token, user }` session from either sign-in, so the user stays
+  /// logged in after closing the app.
+  Future<AuthUser> _saveSession(Map<String, dynamic> data) async {
     final user = UserModel.fromJson(data['user']);
-
-    // Save both, so the user stays logged in after closing the app.
-    await tokenStorage.save(token);
+    await tokenStorage.save(data['token'] as String);
     await tokenStorage.saveUser(jsonEncode(user.toJson()));
-
     return user.toEntity();
   }
 
@@ -67,6 +71,102 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthUser> updateProfile(
+    AuthUser current, {
+    required String fullName,
+    String? email,
+  }) async {
+    final data = await remoteDataSource.updateMe({
+      'full_name': fullName,
+      // The server can't clear a field, so an empty email is just not sent.
+      if (email != null && email.isNotEmpty) 'email': email,
+    });
+    final updated = current.copyWith(
+      fullName: data['full_name'],
+      email: data['email'],
+    );
+    await tokenStorage.saveUser(
+      jsonEncode(UserModel.fromEntity(updated).toJson()),
+    );
+    return updated;
+  }
+
+  @override
+  Future<void> changePassword(String current, String next) async {
+    await remoteDataSource.changePassword(current, next);
+    // The server revoked every phone's fingerprint token. This phone just
+    // proved the new password, so it quietly enrolls again.
+    if (await tokenStorage.readDeviceToken() == null) return;
+    try {
+      await _enroll(next);
+    } on AppException {
+      await tokenStorage.clearDeviceToken();
+    }
+  }
+
+  @override
+  Future<bool> biometricAvailable() => biometric.isAvailable();
+
+  @override
+  Future<bool> biometricEnabled() async {
+    return await tokenStorage.readDeviceToken() != null;
+  }
+
+  @override
+  Future<bool> enableBiometric(String password) async {
+    // Scan first, so a cancelled scan never leaves a token on the server.
+    final scanned = await biometric.authenticate(
+      'أكّد بصمتك لتفعيل الدخول بالبصمة',
+    );
+    if (!scanned) return false;
+    await _enroll(password);
+    return true;
+  }
+
+  /// The server checks the password and issues this phone's device token.
+  Future<void> _enroll(String password) async {
+    final data = await remoteDataSource.enrollDevice(
+      password,
+      defaultTargetPlatform.name,
+    );
+    await tokenStorage.saveDeviceToken(data['device_token'] as String);
+  }
+
+  @override
+  Future<void> disableBiometric() async {
+    final token = await tokenStorage.readDeviceToken();
+    if (token != null) {
+      try {
+        await remoteDataSource.revokeDevice(token);
+      } on AppException {
+        // Offline: the token is still forgotten here, and expires on its own.
+      }
+    }
+    await tokenStorage.clearDeviceToken();
+  }
+
+  @override
+  Future<AuthUser?> signInWithBiometric() async {
+    final token = await tokenStorage.readDeviceToken();
+    if (token == null) {
+      throw const AppException('فعّل الدخول بالبصمة من صفحة حسابي أولاً');
+    }
+    final scanned = await biometric.authenticate('سجّل الدخول ببصمتك');
+    if (!scanned) return null;
+    try {
+      return await _saveSession(await remoteDataSource.deviceSignIn(token));
+    } on AppException catch (error) {
+      if (error.statusCode != 401) rethrow;
+      // Revoked or expired (e.g. the password changed on another phone).
+      await tokenStorage.clearDeviceToken();
+      throw const AppException(
+        'انتهت صلاحية الدخول بالبصمة. سجّل الدخول بكلمة المرور ثم فعّلها من جديد',
+        statusCode: 401,
+      );
+    }
+  }
+
+  @override
   Future<void> requestActivation(String username, String phone) {
     return remoteDataSource.requestActivation(username, phone);
   }
@@ -85,5 +185,9 @@ class AuthRepositoryImpl implements AuthRepository {
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final remoteDataSource = ref.watch(authRemoteDataSourceProvider);
   final tokenStorage = ref.watch(tokenStorageProvider);
-  return AuthRepositoryImpl(remoteDataSource, tokenStorage);
+  return AuthRepositoryImpl(
+    remoteDataSource,
+    tokenStorage,
+    ref.watch(biometricDataSourceProvider),
+  );
 });

@@ -40,7 +40,8 @@ class ApiClient {
           final path = error.requestOptions.path;
           final isLoginRequest =
               path.startsWith('/auth/signin') ||
-              path.startsWith('/auth/activate');
+              path.startsWith('/auth/activate') ||
+              path.startsWith('/auth/biometric/signin');
 
           if (error.response?.statusCode == 401 && !isLoginRequest) {
             await tokenStorage.clear();
@@ -82,9 +83,9 @@ class ApiClient {
     }
   }
 
-  Future<dynamic> delete(String path) async {
+  Future<dynamic> delete(String path, {Object? data}) async {
     try {
-      final response = await dio.delete(path);
+      final response = await dio.delete(path, data: data);
       return response.data['data'];
     } on DioException catch (error) {
       throw _toAppException(error);

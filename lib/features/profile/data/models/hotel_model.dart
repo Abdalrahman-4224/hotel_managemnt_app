@@ -2,9 +2,17 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../core/utils/json_parsers.dart';
 import '../../domain/entities/profile.dart';
 
-/// GET /hotels/current → the subscription card.
+/// GET /hotels/current and GET /hotels/current/subscription.
 class HotelModel {
   const HotelModel._();
+
+  static Hotel hotelFromJson(Map<String, dynamic> json) {
+    return Hotel(
+      id: parseInt(json['hotel_id']) ?? 0,
+      name: json['name'] ?? '',
+      roomsCount: parseInt(json['rooms_count']) ?? 0,
+    );
+  }
 
   static Subscription subscriptionFromJson(Map<String, dynamic> json) {
     final start = parseDate(json['current_subscreption_start_date']);
@@ -15,7 +23,6 @@ class HotelModel {
         ? 1
         : end.difference(start).inDays;
     return Subscription(
-      hotelName: json['name'] ?? '',
       name: 'اشتراك الفندق',
       status: json['status'] == 'Active' ? 'نشط' : 'متوقف',
       endsOn: fmtDate(end),

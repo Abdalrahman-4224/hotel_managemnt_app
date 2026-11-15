@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/widgets/widgets.dart';
@@ -26,19 +27,22 @@ class SettingsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final row = ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 58),
+      constraints: BoxConstraints(minHeight: 58.r),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.s14,
+          vertical: AppSpacing.s10,
+        ),
         child: Row(
           children: [
             NzIconTile(
               icon,
               tone: NzIconTileTone.inert,
-              size: 36,
-              radius: 12,
-              iconSize: 18,
+              size: 36.r,
+              radius: AppRadius.r12,
+              iconSize: 18.r,
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: AppSpacing.s12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,7 +50,7 @@ class SettingsRow extends StatelessWidget {
                 children: [
                   Text(title, style: AppText.body(15)),
                   if (subtitle != null) ...[
-                    const SizedBox(height: 2),
+                    SizedBox(height: AppSpacing.s2),
                     Text(
                       subtitle!,
                       style: AppText.body(12.5, color: AppColors.inkMuted),
@@ -56,21 +60,27 @@ class SettingsRow extends StatelessWidget {
               ),
             ),
             if (value != null) ...[
-              const SizedBox(width: 12),
+              SizedBox(width: AppSpacing.s12),
               Text(value!, style: AppText.body(13, color: AppColors.inkMuted)),
             ],
-            const SizedBox(width: 12),
-            trailing ??
-                const Icon(
-                  LucideIcons.chevronLeft,
-                  size: 16,
-                  color: AppColors.inkFaint,
-                ),
+            // A chevron only on rows that open something; an info row has none,
+            // so nothing looks tappable unless it is.
+            if (trailing != null) ...[
+              SizedBox(width: AppSpacing.s12),
+              trailing!,
+            ] else if (onTap != null) ...[
+              SizedBox(width: AppSpacing.s12),
+              Icon(
+                LucideIcons.chevronLeft,
+                size: 16.r,
+                color: AppColors.inkFaint,
+              ),
+            ],
           ],
         ),
       ),
     );
-    if (trailing != null) return row;
-    return InkWell(onTap: onTap ?? () {}, child: row);
+    if (onTap == null) return row;
+    return InkWell(onTap: onTap, child: row);
   }
 }

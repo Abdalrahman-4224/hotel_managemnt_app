@@ -1,5 +1,7 @@
 package com.example.hotel_managemnt_app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 
-class MainActivity : FlutterActivity()
+// FlutterFragmentActivity, not FlutterActivity: local_auth's fingerprint
+// prompt is a fragment and needs it.
+class MainActivity : FlutterFragmentActivity()

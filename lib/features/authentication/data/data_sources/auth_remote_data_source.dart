@@ -22,6 +22,50 @@ class AuthRemoteDataSource {
     await apiClient.post('/auth/signout');
   }
 
+  /// Edits the signed-in user's own name and email. Returns the updated user.
+  /// The phone can't be changed here - the server refuses it.
+  Future<Map<String, dynamic>> updateMe(Map<String, dynamic> fields) async {
+    final data = await apiClient.put('/auth/me', data: fields);
+    return data;
+  }
+
+  Future<void> changePassword(String current, String next) async {
+    await apiClient.put(
+      '/auth/me/password',
+      data: {'current_password': current, 'new_password': next},
+    );
+  }
+
+  /// Turns fingerprint sign-in on for this phone. The server checks the
+  /// password once and returns `{ device_token, expires_at }`.
+  Future<Map<String, dynamic>> enrollDevice(
+    String password,
+    String deviceName,
+  ) async {
+    final data = await apiClient.post(
+      '/auth/biometric/enroll',
+      data: {'password': password, 'device_name': deviceName},
+    );
+    return data;
+  }
+
+  /// Trades the device token for a session: `{ token, user }`.
+  Future<Map<String, dynamic>> deviceSignIn(String deviceToken) async {
+    final data = await apiClient.post(
+      '/auth/biometric/signin',
+      data: {'device_token': deviceToken},
+    );
+    return data;
+  }
+
+  /// Revokes this phone's token on the server.
+  Future<void> revokeDevice(String deviceToken) async {
+    await apiClient.delete(
+      '/auth/biometric',
+      data: {'device_token': deviceToken},
+    );
+  }
+
   /// Returns `{ is_superadmin, permissions: [codes] }`.
   Future<Map<String, dynamic>> fetchPermissions() async {
     final data = await apiClient.get('/auth/permissions');

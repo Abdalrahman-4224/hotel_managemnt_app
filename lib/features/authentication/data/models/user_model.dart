@@ -25,6 +25,20 @@ class UserModel {
     required this.email,
   });
 
+  factory UserModel.fromEntity(AuthUser user) {
+    return UserModel(
+      id: user.id,
+      hotelId: user.hotelId,
+      roleId: user.roleId,
+      departmentId: user.departmentId,
+      fullName: user.fullName,
+      username: user.username,
+      roleName: user.roleName,
+      phone: user.phone,
+      email: user.email,
+    );
+  }
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: parseInt(json['user_id'])!,

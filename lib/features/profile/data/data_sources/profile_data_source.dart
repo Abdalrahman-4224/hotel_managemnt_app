@@ -8,9 +8,15 @@ class ProfileDataSource {
 
   ProfileDataSource(this.apiClient);
 
-  /// The signed-in user's hotel, with its subscription dates and room count.
+  /// The signed-in user's hotel: name and room count.
   Future<Map<String, dynamic>> fetchCurrentHotel() async {
     final data = await apiClient.get('/hotels/current');
+    return data;
+  }
+
+  /// The hotel's subscription. 403 without SUBSCRIPTION_VIEW.
+  Future<Map<String, dynamic>> fetchSubscription() async {
+    final data = await apiClient.get('/hotels/current/subscription');
     return data;
   }
 }

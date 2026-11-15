@@ -65,4 +65,5 @@ class Permissions {
   static const dashboardView = 'DASHBOARD_VIEW';
   static const staffView = 'STAFF_VIEW';
   static const guestView = 'GUEST_VIEW';
+  static const subscriptionView = 'SUBSCRIPTION_VIEW';
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -8,7 +9,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../authentication/domain/entities/permissions.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../../authentication/presentation/controllers/permissions_controller.dart';
-import '../../../profile/presentation/controllers/subscription_controller.dart';
+import '../../../profile/presentation/controllers/hotel_controller.dart';
 import '../../domain/entities/dashboard_summary.dart';
 import '../controllers/dashboard_controller.dart';
 import '../widgets/section_tile.dart';
@@ -26,7 +27,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final can = ref.watch(canProvider);
     final user = ref.watch(authControllerProvider).user;
-    final hotel = ref.watch(subscriptionProvider).value?.hotelName ?? '';
+    final hotel = ref.watch(currentHotelProvider).value?.name ?? '';
     // Without DASHBOARD_VIEW the summary endpoint returns 403, so don't ask
     // for it at all - just show the sections this user can open.
     final showSummary = can.can(Permissions.dashboardView);
@@ -75,29 +76,29 @@ class DashboardScreen extends ConsumerWidget {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.fromLTRB(
-        16,
-        16,
-        16,
+        AppSpacing.s16,
+        AppSpacing.s16,
+        AppSpacing.s16,
         NzBottomNav.bodyPadding(context),
       ),
       children: [
         if (data != null) ...[
           _RevenueCard(data: data),
-          const SizedBox(height: 18),
+          SizedBox(height: AppSpacing.s18),
           _StatsRow(data: data),
-          const SizedBox(height: 18),
+          SizedBox(height: AppSpacing.s18),
         ],
         const NzSectionTitle('الأقسام'),
-        const SizedBox(height: 10),
+        SizedBox(height: AppSpacing.s10),
         _SectionsGrid(can: can),
         if (showMovements) ...[
-          const SizedBox(height: 18),
+          SizedBox(height: AppSpacing.s18),
           NzSectionTitle(
             'حركة اليوم',
             actionLabel: 'عرض الكل',
             onAction: () => context.go(AppRoutes.bookings),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: AppSpacing.s10),
           if (data.movements.isEmpty)
             NzDashedBox(
               child: Text(
@@ -129,22 +130,18 @@ class _RevenueCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
-                LucideIcons.wallet,
-                size: 16,
-                color: AppColors.goldLight,
-              ),
-              const SizedBox(width: 8),
+              Icon(LucideIcons.wallet, size: 16.r, color: AppColors.goldLight),
+              SizedBox(width: AppSpacing.s8),
               Text(
                 'إيراد اليوم',
                 style: AppText.body(13, color: AppColors.onInkMuted),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           Wrap(
-            spacing: 16,
-            runSpacing: 6,
+            spacing: AppSpacing.s16,
+            runSpacing: AppSpacing.s6,
             crossAxisAlignment: WrapCrossAlignment.end,
             children: [
               NzAmount(
@@ -165,9 +162,9 @@ class _RevenueCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           const NzDivider(color: AppColors.onInkLine),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           Row(
             children: [
               Expanded(
@@ -213,7 +210,7 @@ class _StatsRow extends StatelessWidget {
               footer: NzProgressBar(value: data.occupancy),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: AppSpacing.s10),
           Expanded(
             child: _StatCard(
               label: 'وصول اليوم',
@@ -224,7 +221,7 @@ class _StatsRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: AppSpacing.s10),
           Expanded(
             child: _StatCard(
               label: 'مغادرة اليوم',
@@ -255,15 +252,18 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NzCard(
-      radius: 18,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      radius: AppRadius.r18,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s12,
+        vertical: AppSpacing.s14,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(label, style: AppText.body(12.5, color: AppColors.inkMuted)),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.s8),
           Text(value, style: AppText.num(22, height: 1)),
-          const SizedBox(height: 8),
+          SizedBox(height: AppSpacing.s8),
           footer,
         ],
       ),
@@ -345,13 +345,13 @@ class _SectionsGrid extends StatelessWidget {
     return Column(
       children: [
         for (var i = 0; i < tiles.length; i += 2) ...[
-          if (i > 0) const SizedBox(height: 10),
+          if (i > 0) SizedBox(height: AppSpacing.s10),
           IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(child: tiles[i]),
-                const SizedBox(width: 10),
+                SizedBox(width: AppSpacing.s10),
                 // An odd number of tiles leaves the last row half empty.
                 if (i + 1 < tiles.length)
                   Expanded(child: tiles[i + 1])
@@ -374,11 +374,14 @@ class _MovementRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s14,
+        vertical: AppSpacing.s12,
+      ),
       child: Row(
         children: [
           NzInitialAvatar(m.initial),
-          const SizedBox(width: 12),
+          SizedBox(width: AppSpacing.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

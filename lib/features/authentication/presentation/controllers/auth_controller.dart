@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/auth_user.dart';
+import 'biometric_controller.dart';
 
 enum AuthStatus {
   checking, // app just opened, reading the saved session
@@ -54,6 +55,48 @@ class AuthController extends Notifier<AuthState> {
         errorMessage: error.message,
       );
     }
+  }
+
+  /// Signs in with the saved login after a fingerprint scan. Cancelling the
+  /// scan just leaves the login screen as it was.
+  Future<void> signInWithBiometric() async {
+    state = const AuthState(status: AuthStatus.loggedOut, isLoading: true);
+    try {
+      final user = await ref.read(authRepositoryProvider).signInWithBiometric();
+      state = user == null
+          ? const AuthState(status: AuthStatus.loggedOut)
+          : AuthState(status: AuthStatus.loggedIn, user: user);
+    } on AppException catch (error) {
+      // The saved login may have just been wiped (password changed elsewhere).
+      ref.invalidate(biometricStatusProvider);
+      state = AuthState(
+        status: AuthStatus.loggedOut,
+        errorMessage: error.message,
+      );
+    }
+  }
+
+  /// Saves a new name and email. Errors are rethrown so the form can show them.
+  Future<void> updateProfile({required String fullName, String? email}) async {
+    final updated = await ref
+        .read(authRepositoryProvider)
+        .updateProfile(state.user!, fullName: fullName, email: email);
+    state = AuthState(status: AuthStatus.loggedIn, user: updated);
+  }
+
+  /// Errors are rethrown so the form can show them.
+  Future<void> changePassword(String current, String next) {
+    return ref.read(authRepositoryProvider).changePassword(current, next);
+  }
+
+  /// Turns fingerprint sign-in on for the signed-in user. False if the scan
+  /// was cancelled; errors (e.g. a wrong password) are rethrown.
+  Future<bool> enableBiometric(String password) {
+    return ref.read(authRepositoryProvider).enableBiometric(password);
+  }
+
+  Future<void> disableBiometric() {
+    return ref.read(authRepositoryProvider).disableBiometric();
   }
 
   Future<void> signOut() async {

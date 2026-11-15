@@ -135,7 +135,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(AppSpacing.s16),
               children: [
                 Text(
                   subtitle,
@@ -145,23 +145,23 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                     height: 1.7,
                   ),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: AppSpacing.s18),
                 NzCard(
-                  radius: 24,
+                  radius: AppRadius.r24,
                   shadow: AppShadows.card,
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(AppSpacing.s20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       ..._fields(),
                       if (_error != null) ...[
-                        const SizedBox(height: 12),
+                        SizedBox(height: AppSpacing.s12),
                         Text(
                           _error!,
                           style: AppText.body(13, color: AppColors.goldDeep),
                         ),
                       ],
-                      const SizedBox(height: 20),
+                      SizedBox(height: AppSpacing.s20),
                       NzPrimaryButton(
                         label: _isLoading ? 'جارٍ الإرسال...' : button,
                         icon: LucideIcons.check,
@@ -190,7 +190,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
             textAlign: TextAlign.right,
             style: AppText.body(16),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: AppSpacing.s16),
           NzTextField(
             label: 'رقم الهاتف',
             hint: '07700000000',
@@ -204,7 +204,7 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
       case _Step.code:
         return [
           OtpInput(key: _otpKey, onChanged: (v) => _code = v),
-          const SizedBox(height: 12),
+          SizedBox(height: AppSpacing.s12),
           TextButton(
             onPressed: _isLoading ? null : _sendCode,
             child: Text(

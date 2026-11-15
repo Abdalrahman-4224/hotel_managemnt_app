@@ -19,6 +19,33 @@ abstract class AuthRepository {
   /// What the signed-in user is allowed to do.
   Future<Permissions> getPermissions();
 
+  /// Saves a new name and email for the signed-in user. The phone can't change.
+  Future<AuthUser> updateProfile(
+    AuthUser current, {
+    required String fullName,
+    String? email,
+  });
+
+  /// Changes the signed-in user's password; the fingerprint login follows it.
+  Future<void> changePassword(String current, String next);
+
+  /// The phone has a fingerprint sensor with a fingerprint enrolled.
+  Future<bool> biometricAvailable();
+
+  /// Fingerprint sign-in is turned on for this phone.
+  Future<bool> biometricEnabled();
+
+  /// Turns fingerprint sign-in on: a fingerprint scan, then the server checks
+  /// the password and issues this phone a revocable device token.
+  /// False if the user cancelled the scan.
+  Future<bool> enableBiometric(String password);
+
+  Future<void> disableBiometric();
+
+  /// Signs in with this phone's device token after a fingerprint scan.
+  /// Null if the user cancelled the scan.
+  Future<AuthUser?> signInWithBiometric();
+
   /// First-time login for an invited user, in three steps.
   Future<void> requestActivation(String username, String phone);
   Future<String> verifyActivation(String username, String phone, String code);

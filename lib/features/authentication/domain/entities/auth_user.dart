@@ -22,5 +22,17 @@ class AuthUser {
     required this.email,
   });
 
-  bool get isAdmin => roleName == 'admin';
+  AuthUser copyWith({String? fullName, String? email}) {
+    return AuthUser(
+      id: id,
+      hotelId: hotelId,
+      roleId: roleId,
+      departmentId: departmentId,
+      fullName: fullName ?? this.fullName,
+      username: username,
+      roleName: roleName,
+      phone: phone,
+      email: email ?? this.email,
+    );
+  }
 }

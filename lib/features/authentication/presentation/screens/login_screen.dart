@@ -8,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../controllers/auth_controller.dart';
+import '../controllers/biometric_controller.dart';
 
 /// Sign in with username + password.
 /// After a successful login the router moves to home by itself.
@@ -52,36 +53,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.paperWarm,
-      body: CustomScrollView(
-        slivers: [
-          SliverFillRemaining(
-            hasScrollBody: false,
+      // The keyboard shrinks the body. The content is at least a screen tall,
+      // so the form still sits at the bottom when there's room, and it
+      // scrolls instead of overflowing when there isn't.
+      body: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Padding(
               padding: EdgeInsets.only(
-                top: MediaQuery.paddingOf(context).top + 28.h,
+                top: MediaQuery.paddingOf(context).top + 28.r,
               ),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const _Intro(
                     title: 'تسجيل الدخول',
                     subtitle:
                         'أدخل اسم المستخدم وكلمة المرور للدخول إلى حسابك.',
                   ),
-                  const Spacer(),
                   Padding(
                     padding: EdgeInsets.fromLTRB(
-                      16.w,
-                      24.h,
-                      16.w,
-                      34.h + MediaQuery.paddingOf(context).bottom,
+                      AppSpacing.s16,
+                      AppSpacing.s24,
+                      AppSpacing.s16,
+                      34.r + MediaQuery.paddingOf(context).bottom,
                     ),
                     // Keeps the form at a readable width on tablets.
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 480),
+                      constraints: BoxConstraints(maxWidth: 480.r),
                       child: Column(
                         children: [
                           _loginCard(isLoading: auth.isLoading, error: error),
-                          SizedBox(height: 18.h),
+                          SizedBox(height: AppSpacing.s18),
                           const _SupportLine(),
                         ],
                       ),
@@ -91,34 +95,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _loginCard({required bool isLoading, String? error}) {
     return _StepCard(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.s20,
+        vertical: AppSpacing.s24,
+      ),
       children: [
         const _FieldLabel('اسم المستخدم'),
-        SizedBox(height: 7.h),
+        SizedBox(height: 7.r),
         NzTextField(
           controller: _username,
           hint: 'اسم المستخدم',
-          height: 54.h,
+          height: 54.r,
           error: error != null,
           textDirection: TextDirection.ltr,
           textAlign: TextAlign.right,
           autofillHints: const [AutofillHints.username],
           style: AppText.body(16),
         ),
-        SizedBox(height: 18.h),
+        SizedBox(height: AppSpacing.s18),
         const _FieldLabel('كلمة المرور'),
-        SizedBox(height: 7.h),
+        SizedBox(height: 7.r),
         NzTextField(
           controller: _password,
           hint: '••••••••',
-          height: 54.h,
+          height: 54.r,
           error: error != null,
           obscureText: true,
           textDirection: TextDirection.ltr,
@@ -127,23 +134,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           style: AppText.body(16),
         ),
         if (error != null) ...[
-          SizedBox(height: 10.h),
+          SizedBox(height: AppSpacing.s10),
           Text(error, style: AppText.body(13, color: AppColors.goldDeep)),
         ],
-        SizedBox(height: 22.h),
+        SizedBox(height: 22.r),
         NzPrimaryButton(
           label: isLoading ? 'جارٍ الدخول...' : 'دخول',
           icon: LucideIcons.logIn,
           onPressed: _signIn,
           disabled: isLoading,
-          height: 56.h,
-          radius: 18.r,
+          height: 56.r,
+          radius: AppRadius.r18,
           fontSize: 16,
           weight: FontWeight.w500,
           shadow: AppShadows.ink,
         ),
+        // Only once the user turned it on from their profile, on this phone.
+        if (_biometricOn) ...[
+          SizedBox(height: AppSpacing.s10),
+          NzOutlineButton(
+            label: 'الدخول بالبصمة',
+            icon: LucideIcons.fingerprint,
+            height: 56.r,
+            radius: AppRadius.r18,
+            fontSize: 16,
+            onPressed: isLoading
+                ? null
+                : () => ref
+                      .read(authControllerProvider.notifier)
+                      .signInWithBiometric(),
+          ),
+        ],
       ],
     );
+  }
+
+  bool get _biometricOn {
+    final status = ref.watch(biometricStatusProvider).value;
+    return status != null && status.available && status.enabled;
   }
 }
 
@@ -156,15 +184,15 @@ class _Intro extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24.w),
+      padding: EdgeInsets.symmetric(horizontal: AppSpacing.s24),
       child: Column(
         children: [
-          NzBrandMark(size: 64.r, radius: 22.r),
-          SizedBox(height: 14.h),
+          NzBrandMark(size: 64.r, radius: AppRadius.r22),
+          SizedBox(height: AppSpacing.s14),
           Text(title, style: AppText.display(28)),
-          SizedBox(height: 14.h),
+          SizedBox(height: AppSpacing.s14),
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 300.w),
+            constraints: BoxConstraints(maxWidth: 300.r),
             child: Text(
               subtitle,
               textAlign: TextAlign.center,
@@ -197,7 +225,7 @@ class _StepCard extends StatelessWidget {
         .animate()
         .fadeIn(duration: AppMotion.popIn, curve: AppMotion.easeOut)
         .moveY(
-          begin: 10.h,
+          begin: 10.r,
           end: 0,
           duration: AppMotion.popIn,
           curve: AppMotion.easeOut,

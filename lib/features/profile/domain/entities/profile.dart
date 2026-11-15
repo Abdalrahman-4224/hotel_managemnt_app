@@ -14,6 +14,15 @@ class UserProfile {
   final String maskedPhone;
 }
 
+/// The signed-in user's hotel: what every staff member may see.
+class Hotel {
+  const Hotel({required this.id, required this.name, required this.roomsCount});
+
+  final int id;
+  final String name;
+  final int roomsCount;
+}
+
 class PlanUsage {
   const PlanUsage(this.label, this.used, this.limit);
 
@@ -24,9 +33,9 @@ class PlanUsage {
   double get ratio => limit == 0 ? 0 : used / limit;
 }
 
+/// The hotel's subscription. Only for roles with SUBSCRIPTION_VIEW.
 class Subscription {
   const Subscription({
-    required this.hotelName,
     required this.name,
     required this.status,
     required this.endsOn,
@@ -36,7 +45,6 @@ class Subscription {
     required this.usage,
   });
 
-  final String hotelName;
   final String name;
   final String status;
   final String endsOn;
@@ -44,12 +52,4 @@ class Subscription {
   final int totalDays;
   final String note;
   final List<PlanUsage> usage;
-}
-
-class RenewalTerm {
-  const RenewalTerm(this.label, this.note, this.price);
-
-  final String label;
-  final String note;
-  final String price;
 }
