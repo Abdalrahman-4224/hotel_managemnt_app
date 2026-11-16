@@ -5,6 +5,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../widgets/otp_input.dart';
@@ -85,13 +86,9 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
 
   Future<void> _setPassword() async {
     final password = _password.text;
-    // Same rule as the server: 8+ characters, a letter and a number.
-    final strong =
-        password.length >= 8 &&
-        RegExp(r'[A-Za-z]').hasMatch(password) &&
-        RegExp(r'[0-9]').hasMatch(password);
-    if (!strong) {
-      setState(() => _error = 'كلمة المرور 8 أحرف على الأقل وفيها حرف ورقم.');
+    final problem = passwordProblem(password);
+    if (problem != null) {
+      setState(() => _error = problem);
       return;
     }
     await _run(() async {

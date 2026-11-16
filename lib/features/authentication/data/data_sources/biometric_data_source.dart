@@ -3,33 +3,46 @@ import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 
 import '../../../../core/errors/app_exception.dart';
+import '../../domain/entities/biometric_kind.dart';
 
-/// The phone's fingerprint (or face) sensor.
+/// Which sensor the phone reported.
+///
+/// iOS names it: `face` for Face ID, `fingerprint` for Touch ID. Android only
+/// reports how strong the biometric is, never which one, so there the label
+/// follows the reader that virtually every Android phone has.
+BiometricKind kindFromTypes(List<BiometricType> types) =>
+    types.contains(BiometricType.face)
+    ? BiometricKind.face
+    : BiometricKind.fingerprint;
+
+/// The phone's fingerprint or face sensor.
 class BiometricDataSource {
   final _auth = LocalAuthentication();
 
-  /// True if the phone has a sensor and at least one fingerprint enrolled.
-  Future<bool> isAvailable() async {
+  /// What this phone recognises its owner by, or null if it can't: no sensor,
+  /// or nothing enrolled on it.
+  Future<BiometricKind?> availableKind() async {
     try {
-      if (!await _auth.isDeviceSupported()) return false;
-      return (await _auth.getAvailableBiometrics()).isNotEmpty;
+      if (!await _auth.isDeviceSupported()) return null;
+      final types = await _auth.getAvailableBiometrics();
+      return types.isEmpty ? null : kindFromTypes(types);
     } catch (_) {
-      return false;
+      return null;
     }
   }
 
   /// Shows the system prompt. True if the scan matched, false if the user
   /// cancelled. Throws an [AppException] for anything they should be told.
-  Future<bool> authenticate(String reason) async {
+  Future<bool> authenticate(String reason, BiometricKind kind) async {
     try {
       return await _auth.authenticate(
         localizedReason: reason,
         biometricOnly: true,
         persistAcrossBackgrounding: true,
-        authMessages: const [
+        authMessages: [
           AndroidAuthMessages(
-            signInTitle: 'الدخول بالبصمة',
-            signInHint: 'المس مستشعر البصمة',
+            signInTitle: kind.signInTitle,
+            signInHint: kind.promptHint,
             cancelButton: 'إلغاء',
           ),
         ],
@@ -41,9 +54,9 @@ class BiometricDataSource {
         case LocalAuthExceptionCode.timeout:
           return false;
         case LocalAuthExceptionCode.noBiometricsEnrolled:
-          throw const AppException('لا توجد بصمة مسجّلة على هذا الجهاز');
+          throw AppException(kind.notEnrolled);
         default:
-          throw const AppException('تعذّر التحقق بالبصمة، حاول مرة أخرى');
+          throw AppException(kind.failed);
       }
     }
   }

@@ -22,4 +22,8 @@ class AppConstants {
 
   static const connectTimeout = Duration(seconds: 15);
   static const receiveTimeout = Duration(seconds: 20);
+
+  /// The assistant answers one question at a time for the whole server, so a
+  /// reply can wait in line well past [receiveTimeout].
+  static const assistantTimeout = Duration(seconds: 90);
 }

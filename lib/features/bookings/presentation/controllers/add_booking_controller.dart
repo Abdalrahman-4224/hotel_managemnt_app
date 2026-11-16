@@ -177,6 +177,10 @@ class AddBookingController extends ChangeNotifier {
     if (guestName.text.trim().isEmpty) return 'اكتب اسم النزيل.';
     if (nationalId.text.trim().isEmpty) return 'اكتب رقم الهوية أو الجواز.';
     if (!checkOut.isAfter(checkIn)) return 'تاريخ الخروج بعد تاريخ الدخول.';
+    // Clearing the price box leaves 0, and the server takes whatever total it
+    // is sent - so a booking worth nothing would be saved without a word.
+    if (rate <= 0) return 'اكتب سعر الليلة.';
+    if (selected.isEmpty) return 'اختر غرفة واحدة على الأقل.';
     return null;
   }
 

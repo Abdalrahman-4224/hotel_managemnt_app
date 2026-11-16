@@ -42,6 +42,15 @@ class DashboardScreen extends ConsumerWidget {
             title: _greeting(user?.fullName),
             leading: const NzBrandMark(),
             actions: [
+              if (can.can(Permissions.assistantUse))
+                NzIconButton(
+                  icon: LucideIcons.sparkles,
+                  tooltip: 'المساعد الذكي',
+                  iconColor: AppColors.goldLight,
+                  background: AppColors.ink,
+                  borderColor: AppColors.ink,
+                  onPressed: () => context.push(AppRoutes.assistant),
+                ),
               NzIconButton(
                 icon: LucideIcons.bell,
                 tooltip: 'الإشعارات',
@@ -287,6 +296,13 @@ class _SectionsGrid extends StatelessWidget {
           title: 'إضافة حجز',
           subtitle: 'حجز فردي أو حملة',
           onTap: () => context.push(AppRoutes.addBooking),
+        ),
+      if (can.can(Permissions.assistantUse))
+        SectionTile(
+          icon: LucideIcons.sparkles,
+          title: 'المساعد الذكي',
+          subtitle: 'اسأل عن الإيراد والإشغال',
+          onTap: () => context.push(AppRoutes.assistant),
         ),
       if (can.can(Permissions.roomView))
         SectionTile(

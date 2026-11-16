@@ -1,4 +1,5 @@
 import '../entities/auth_user.dart';
+import '../entities/biometric_kind.dart';
 import '../entities/permissions.dart';
 
 /// What the app can do with authentication.
@@ -26,23 +27,24 @@ abstract class AuthRepository {
     String? email,
   });
 
-  /// Changes the signed-in user's password; the fingerprint login follows it.
+  /// Changes the signed-in user's password; the biometric login follows it.
   Future<void> changePassword(String current, String next);
 
-  /// The phone has a fingerprint sensor with a fingerprint enrolled.
-  Future<bool> biometricAvailable();
+  /// What this phone recognises its owner by (a fingerprint, or a face on an
+  /// iPhone with Face ID), or null if it can't.
+  Future<BiometricKind?> biometricKind();
 
-  /// Fingerprint sign-in is turned on for this phone.
+  /// Biometric sign-in is turned on for this phone.
   Future<bool> biometricEnabled();
 
-  /// Turns fingerprint sign-in on: a fingerprint scan, then the server checks
-  /// the password and issues this phone a revocable device token.
+  /// Turns biometric sign-in on: a scan, then the server checks the password
+  /// and issues this phone a revocable device token.
   /// False if the user cancelled the scan.
   Future<bool> enableBiometric(String password);
 
   Future<void> disableBiometric();
 
-  /// Signs in with this phone's device token after a fingerprint scan.
+  /// Signs in with this phone's device token after a scan.
   /// Null if the user cancelled the scan.
   Future<AuthUser?> signInWithBiometric();
 

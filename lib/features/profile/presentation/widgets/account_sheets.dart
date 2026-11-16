@@ -4,7 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../authentication/domain/entities/biometric_kind.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../../authentication/presentation/controllers/biometric_controller.dart';
 
@@ -21,22 +23,15 @@ Future<void> showChangePasswordSheet(BuildContext context) {
   );
 }
 
-/// Turn fingerprint sign-in on: confirm the password, then scan a finger.
-Future<void> showEnableBiometricSheet(BuildContext context) {
+/// Turn biometric sign-in on: confirm the password, then scan.
+Future<void> showEnableBiometricSheet(
+  BuildContext context,
+  BiometricKind kind,
+) {
   return showNzSheet<void>(
     context,
-    builder: (_) => const _EnableBiometricSheet(),
+    builder: (_) => _EnableBiometricSheet(kind: kind),
   );
-}
-
-/// Same rule the server enforces (activation and password change).
-String? _passwordProblem(String password) {
-  if (password.length < 8) return 'كلمة المرور 8 أحرف على الأقل.';
-  if (!RegExp(r'[A-Za-z]').hasMatch(password) ||
-      !RegExp(r'[0-9]').hasMatch(password)) {
-    return 'كلمة المرور يجب أن تحتوي على حرف ورقم.';
-  }
-  return null;
 }
 
 // ---------------------------------------------------------------- edit profile
@@ -64,8 +59,14 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
 
   Future<void> _save() async {
     final name = _name.text.trim();
+    final email = _email.text.trim();
     if (name.isEmpty) {
       setState(() => _error = 'اكتب الاسم الكامل.');
+      return;
+    }
+    // The server refuses an address it can't parse; say so in Arabic first.
+    if (email.isNotEmpty && !isValidEmail(email)) {
+      setState(() => _error = 'البريد الإلكتروني غير صحيح.');
       return;
     }
     setState(() {
@@ -75,7 +76,7 @@ class _EditProfileSheetState extends ConsumerState<_EditProfileSheet> {
     try {
       await ref
           .read(authControllerProvider.notifier)
-          .updateProfile(fullName: name, email: _email.text.trim());
+          .updateProfile(fullName: name, email: email);
       if (!mounted) return;
       showNzToast(context, 'تم حفظ المعلومات');
       Navigator.of(context).pop();
@@ -158,7 +159,7 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
     } else if (_next.text != _confirm.text) {
       problem = 'كلمتا المرور الجديدتان غير متطابقتين.';
     } else {
-      problem = _passwordProblem(_next.text);
+      problem = passwordProblem(_next.text);
     }
     if (problem != null) {
       setState(() => _error = problem);
@@ -212,10 +213,13 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
   }
 }
 
-// -------------------------------------------------------------- fingerprint on
+// ---------------------------------------------------------------- biometric on
 
 class _EnableBiometricSheet extends ConsumerStatefulWidget {
-  const _EnableBiometricSheet();
+  const _EnableBiometricSheet({required this.kind});
+
+  /// What this phone recognises its owner by: it names every label here.
+  final BiometricKind kind;
 
   @override
   ConsumerState<_EnableBiometricSheet> createState() =>
@@ -248,12 +252,12 @@ class _EnableBiometricSheetState extends ConsumerState<_EnableBiometricSheet> {
           .enableBiometric(_password.text);
       if (!mounted) return;
       if (!done) {
-        // The fingerprint scan was cancelled: stay here so they can retry.
+        // The scan was cancelled: stay here so they can retry.
         setState(() => _saving = false);
         return;
       }
       ref.invalidate(biometricStatusProvider);
-      showNzToast(context, 'تم تفعيل الدخول بالبصمة');
+      showNzToast(context, widget.kind.enabledToast);
       Navigator.of(context).pop();
     } catch (error) {
       if (mounted) {
@@ -268,11 +272,11 @@ class _EnableBiometricSheetState extends ConsumerState<_EnableBiometricSheet> {
   @override
   Widget build(BuildContext context) {
     return _SheetForm(
-      title: 'الدخول بالبصمة',
-      subtitle: 'أكّد كلمة المرور، ثم ضع إصبعك على المستشعر.',
+      title: widget.kind.signInTitle,
+      subtitle: widget.kind.enableHint,
       error: _error,
       buttonLabel: _saving ? 'جارٍ التفعيل...' : 'تفعيل',
-      buttonIcon: LucideIcons.fingerprint,
+      buttonIcon: widget.kind.icon,
       busy: _saving,
       onSubmit: _enable,
       children: [_PasswordField(label: 'كلمة المرور', controller: _password)],

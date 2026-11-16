@@ -21,4 +21,5 @@ class AppRoutes {
   // Full-screen flows (no bottom nav).
   static const addBooking = '/booking/new';
   static const invoice = '/invoice';
+  static const assistant = '/assistant';
 }

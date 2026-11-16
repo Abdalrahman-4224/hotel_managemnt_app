@@ -8,6 +8,7 @@ import '../../../../core/api/api_providers.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/storage/token_storage.dart';
 import '../../domain/entities/auth_user.dart';
+import '../../domain/entities/biometric_kind.dart';
 import '../../domain/entities/permissions.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../data_sources/auth_remote_data_source.dart';
@@ -105,7 +106,13 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<bool> biometricAvailable() => biometric.isAvailable();
+  Future<BiometricKind?> biometricKind() => biometric.availableKind();
+
+  /// The wording for a prompt or a message. The fallback is only reached if
+  /// the phone lost its sensor since the screen was drawn, and then it only
+  /// picks the words for the failure that follows.
+  Future<BiometricKind> _kind() async =>
+      await biometric.availableKind() ?? BiometricKind.fingerprint;
 
   @override
   Future<bool> biometricEnabled() async {
@@ -114,10 +121,9 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<bool> enableBiometric(String password) async {
+    final kind = await _kind();
     // Scan first, so a cancelled scan never leaves a token on the server.
-    final scanned = await biometric.authenticate(
-      'أكّد بصمتك لتفعيل الدخول بالبصمة',
-    );
+    final scanned = await biometric.authenticate(kind.enableReason, kind);
     if (!scanned) return false;
     await _enroll(password);
     return true;
@@ -147,11 +153,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AuthUser?> signInWithBiometric() async {
+    final kind = await _kind();
     final token = await tokenStorage.readDeviceToken();
-    if (token == null) {
-      throw const AppException('فعّل الدخول بالبصمة من صفحة حسابي أولاً');
-    }
-    final scanned = await biometric.authenticate('سجّل الدخول ببصمتك');
+    if (token == null) throw AppException(kind.notSetUp);
+    final scanned = await biometric.authenticate(kind.signInReason, kind);
     if (!scanned) return null;
     try {
       return await _saveSession(await remoteDataSource.deviceSignIn(token));
@@ -159,10 +164,7 @@ class AuthRepositoryImpl implements AuthRepository {
       if (error.statusCode != 401) rethrow;
       // Revoked or expired (e.g. the password changed on another phone).
       await tokenStorage.clearDeviceToken();
-      throw const AppException(
-        'انتهت صلاحية الدخول بالبصمة. سجّل الدخول بكلمة المرور ثم فعّلها من جديد',
-        statusCode: 401,
-      );
+      throw AppException(kind.expired, statusCode: 401);
     }
   }
 

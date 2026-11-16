@@ -61,9 +61,30 @@ class Permissions {
   static const financeInvoice = 'FINANCE_INVOICE';
   static const financeReports = 'FINANCE_REPORTS';
 
+  // Guests
+  static const guestView = 'GUEST_VIEW';
+  static const guestCreate = 'GUEST_CREATE';
+  static const guestUpdate = 'GUEST_UPDATE';
+  static const guestDelete = 'GUEST_DELETE';
+
+  // Staff and users. STAFF_VIEW is the staff screen (/users/staff); the
+  // USER_* codes are the manager's user administration (/users).
+  static const staffView = 'STAFF_VIEW';
+  static const userView = 'USER_VIEW';
+  static const userCreate = 'USER_CREATE';
+  static const userUpdate = 'USER_UPDATE';
+
+  /// Writes on floors, room types and departments.
+  static const hotelSettings = 'HOTEL_SETTINGS';
+
+  /// Roles and their permissions.
+  static const roleManage = 'ROLE_MANAGE';
+
+  /// The hotel assistant (the AI chat). The platform operator switches this
+  /// on per role; no role has it by default, not even the hotel manager.
+  static const assistantUse = 'ASSISTANT_USE';
+
   // Everything else
   static const dashboardView = 'DASHBOARD_VIEW';
-  static const staffView = 'STAFF_VIEW';
-  static const guestView = 'GUEST_VIEW';
   static const subscriptionView = 'SUBSCRIPTION_VIEW';
 }

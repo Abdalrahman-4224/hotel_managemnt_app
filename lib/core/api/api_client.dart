@@ -44,8 +44,15 @@ class ApiClient {
               path.startsWith('/auth/biometric/signin');
 
           if (error.response?.statusCode == 401 && !isLoginRequest) {
-            await tokenStorage.clear();
-            onUnauthorized?.call();
+            // Only the token we hold now can expire the session. A slow 401
+            // for a request sent before sign-in (no token, or the previous
+            // one) says nothing about the session that replaced it.
+            final sent = error.requestOptions.headers['Authorization'];
+            final current = await tokenStorage.read();
+            if (current != null && sent == 'Bearer $current') {
+              await tokenStorage.clear();
+              onUnauthorized?.call();
+            }
           }
           if (error.response?.statusCode == 403) {
             onForbidden?.call();

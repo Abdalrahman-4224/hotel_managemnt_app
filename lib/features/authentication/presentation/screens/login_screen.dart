@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/routes/app_routes.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../domain/entities/biometric_kind.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/biometric_controller.dart';
 
@@ -101,6 +102,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _loginCard({required bool isLoading, String? error}) {
+    final biometricKind = _biometricKind;
     return _StepCard(
       padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.s20,
@@ -150,11 +152,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           shadow: AppShadows.ink,
         ),
         // Only once the user turned it on from their profile, on this phone.
-        if (_biometricOn) ...[
+        // The wording follows the sensor: a fingerprint, or a face on an iPhone.
+        if (biometricKind != null) ...[
           SizedBox(height: AppSpacing.s10),
           NzOutlineButton(
-            label: 'الدخول بالبصمة',
-            icon: LucideIcons.fingerprint,
+            label: biometricKind.signInTitle,
+            icon: biometricKind.icon,
             height: 56.r,
             radius: AppRadius.r18,
             fontSize: 16,
@@ -169,9 +172,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  bool get _biometricOn {
+  /// What this phone signs in with, or null while it isn't set up here.
+  BiometricKind? get _biometricKind {
     final status = ref.watch(biometricStatusProvider).value;
-    return status != null && status.available && status.enabled;
+    return status != null && status.enabled ? status.kind : null;
   }
 }
 

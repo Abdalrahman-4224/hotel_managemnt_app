@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../authentication/domain/entities/auth_user.dart';
+import '../../../authentication/domain/entities/biometric_kind.dart';
 import '../../../authentication/domain/entities/permissions.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../../authentication/presentation/controllers/biometric_controller.dart';
@@ -39,16 +40,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  /// Off: forget the saved login. On: confirm the password and a fingerprint.
-  Future<void> _setBiometric(bool on) async {
+  /// Off: forget the saved login. On: confirm the password and a scan.
+  Future<void> _setBiometric(BiometricKind kind, bool on) async {
     if (on) {
-      await showEnableBiometricSheet(context);
+      await showEnableBiometricSheet(context, kind);
       return;
     }
     try {
       await ref.read(authControllerProvider.notifier).disableBiometric();
       ref.invalidate(biometricStatusProvider);
-      if (mounted) showNzToast(context, 'تم إيقاف الدخول بالبصمة');
+      if (mounted) showNzToast(context, kind.disabledToast);
     } catch (error) {
       if (mounted) showNzToast(context, errorText(error));
     }
@@ -59,6 +60,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final user = _profile(ref.watch(authControllerProvider).user);
     final hotel = ref.watch(currentHotelProvider).value;
     final biometric = ref.watch(biometricStatusProvider).value;
+    final biometricKind = biometric?.kind;
+    final biometricOn = biometric?.enabled ?? false;
     // The subscription is only fetched for roles allowed to see it.
     final canSeePlan = ref.watch(canProvider).can(Permissions.subscriptionView);
     final plan = canSeePlan ? ref.watch(subscriptionProvider) : null;
@@ -141,16 +144,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       subtitle: 'لا يمكن تغييره، راجع مدير الفندق',
                       value: user.maskedPhone,
                     ),
-                    // Only on phones with a fingerprint sensor set up.
-                    if (biometric != null && biometric.available)
+                    // Only on phones with a sensor set up. The wording and the
+                    // icon follow it: a fingerprint, or a face on an iPhone.
+                    if (biometricKind != null)
                       SettingsRow(
-                        icon: LucideIcons.fingerprint,
-                        title: 'الدخول بالبصمة',
+                        icon: biometricKind.icon,
+                        title: biometricKind.signInTitle,
                         subtitle: 'بدل كلمة المرور على هذا الجهاز',
                         trailing: NzSwitch(
-                          value: biometric.enabled,
-                          semanticLabel: 'الدخول بالبصمة',
-                          onChanged: _setBiometric,
+                          value: biometricOn,
+                          semanticLabel: biometricKind.signInTitle,
+                          onChanged: (on) => _setBiometric(biometricKind, on),
                         ),
                       ),
                   ],

@@ -6,6 +6,7 @@ import '../../features/authentication/domain/entities/permissions.dart';
 import '../../features/authentication/presentation/controllers/auth_controller.dart';
 import '../../features/authentication/presentation/controllers/permissions_controller.dart';
 
+import '../../features/assistant/presentation/screens/assistant_screen.dart';
 import '../../features/authentication/presentation/screens/activation_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/bookings/presentation/screens/add_booking_screen.dart';
@@ -33,6 +34,8 @@ const _routePermission = <String, String>{
   AppRoutes.finance: Permissions.financeView,
   AppRoutes.staff: Permissions.staffView,
   AppRoutes.addBooking: Permissions.bookingCreate,
+  // Platform-only: the operator switches the assistant on per role.
+  AppRoutes.assistant: Permissions.assistantUse,
 };
 
 /// The app's route table. Paths come from [AppRoutes].
@@ -158,5 +161,9 @@ final _routes = <RouteBase>[
     path: AppRoutes.invoice,
     // extra: the booking id (int), or nothing.
     builder: (_, state) => InvoiceScreen(bookingId: state.extra as int?),
+  ),
+  GoRoute(
+    path: AppRoutes.assistant,
+    builder: (_, _) => const AssistantScreen(),
   ),
 ];
