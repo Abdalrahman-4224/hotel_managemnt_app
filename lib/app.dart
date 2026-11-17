@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/authentication/presentation/controllers/permissions_controller.dart';
+import 'features/notifications/presentation/controllers/notifications_controller.dart';
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -20,10 +21,14 @@ class _AppState extends ConsumerState<App> {
   @override
   void initState() {
     super.initState();
-    // A superadmin can change a role's permissions while the app is open, so
-    // reload them whenever the app comes back to the foreground.
+    // A superadmin can change a role's permissions while the app is open, and
+    // notifications arrive while it is away, so both are re-read whenever the
+    // app comes back to the foreground.
     _lifecycle = AppLifecycleListener(
-      onResume: () => ref.read(permissionsEpochProvider.notifier).bump(),
+      onResume: () {
+        ref.read(permissionsEpochProvider.notifier).bump();
+        ref.read(notificationsEpochProvider.notifier).bump();
+      },
     );
   }
 

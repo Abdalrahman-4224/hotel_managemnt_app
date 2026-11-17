@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/app_exception.dart';
+import '../../../notifications/presentation/controllers/push_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/entities/auth_user.dart';
 import 'biometric_controller.dart';
@@ -39,7 +40,15 @@ class AuthController extends Notifier<AuthState> {
       state = const AuthState(status: AuthStatus.loggedOut);
     } else {
       state = AuthState(status: AuthStatus.loggedIn, user: user);
+      _startPush();
     }
+  }
+
+  /// Hands this phone's push token to the server. Done on every sign-in and
+  /// on every start with a saved session, which also refreshes the device's
+  /// "last seen" there. Never allowed to fail a sign-in.
+  void _startPush() {
+    ref.read(pushServiceProvider).start();
   }
 
   Future<void> signIn(String username, String password) async {
@@ -49,6 +58,7 @@ class AuthController extends Notifier<AuthState> {
           .read(authRepositoryProvider)
           .signIn(username, password);
       state = AuthState(status: AuthStatus.loggedIn, user: user);
+      _startPush();
     } on AppException catch (error) {
       state = AuthState(
         status: AuthStatus.loggedOut,
@@ -66,6 +76,7 @@ class AuthController extends Notifier<AuthState> {
       state = user == null
           ? const AuthState(status: AuthStatus.loggedOut)
           : AuthState(status: AuthStatus.loggedIn, user: user);
+      if (user != null) _startPush();
     } on AppException catch (error) {
       // The saved login may have just been wiped (password changed elsewhere).
       ref.invalidate(biometricStatusProvider);
@@ -100,6 +111,9 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> signOut() async {
+    // Withdraw the device while the token still authenticates: once the
+    // session is cleared the server would refuse the request.
+    await ref.read(pushServiceProvider).stop();
     await ref.read(authRepositoryProvider).signOut();
     state = const AuthState(status: AuthStatus.loggedOut);
   }

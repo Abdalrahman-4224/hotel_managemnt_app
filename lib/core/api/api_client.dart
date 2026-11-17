@@ -72,6 +72,21 @@ class ApiClient {
     }
   }
 
+  /// The whole `{ success, message, data, ... }` envelope, for the few
+  /// endpoints that put something useful beside `data` - the notification
+  /// list sends `unread_count` there.
+  Future<Map<String, dynamic>> getEnvelope(
+    String path, {
+    Map<String, dynamic>? query,
+  }) async {
+    try {
+      final response = await dio.get(path, queryParameters: query);
+      return Map<String, dynamic>.from(response.data as Map);
+    } on DioException catch (error) {
+      throw _toAppException(error);
+    }
+  }
+
   Future<dynamic> post(String path, {Object? data}) async {
     try {
       final response = await dio.post(path, data: data);

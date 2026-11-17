@@ -22,4 +22,5 @@ class AppRoutes {
   static const addBooking = '/booking/new';
   static const invoice = '/invoice';
   static const assistant = '/assistant';
+  static const notifications = '/notifications';
 }

@@ -9,6 +9,7 @@ import '../../../../core/widgets/widgets.dart';
 import '../../../authentication/domain/entities/permissions.dart';
 import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../../authentication/presentation/controllers/permissions_controller.dart';
+import '../../../notifications/presentation/controllers/notifications_controller.dart';
 import '../../../profile/presentation/controllers/hotel_controller.dart';
 import '../../domain/entities/dashboard_summary.dart';
 import '../controllers/dashboard_controller.dart';
@@ -28,6 +29,7 @@ class DashboardScreen extends ConsumerWidget {
     final can = ref.watch(canProvider);
     final user = ref.watch(authControllerProvider).user;
     final hotel = ref.watch(currentHotelProvider).value?.name ?? '';
+    final unread = ref.watch(unreadCountProvider).value ?? 0;
     // Without DASHBOARD_VIEW the summary endpoint returns 403, so don't ask
     // for it at all - just show the sections this user can open.
     final showSummary = can.can(Permissions.dashboardView);
@@ -54,8 +56,9 @@ class DashboardScreen extends ConsumerWidget {
               NzIconButton(
                 icon: LucideIcons.bell,
                 tooltip: 'الإشعارات',
-                showDot: true,
-                onPressed: () {},
+                // 99+ keeps the badge from growing wider than the button.
+                badge: unread == 0 ? null : (unread > 99 ? '+99' : '$unread'),
+                onPressed: () => context.push(AppRoutes.notifications),
               ),
             ],
           ),

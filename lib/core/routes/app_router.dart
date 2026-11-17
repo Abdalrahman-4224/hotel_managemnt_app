@@ -8,6 +8,7 @@ import '../../features/authentication/presentation/controllers/permissions_contr
 
 import '../../features/assistant/presentation/screens/assistant_screen.dart';
 import '../../features/authentication/presentation/screens/activation_screen.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/authentication/presentation/screens/login_screen.dart';
 import '../../features/bookings/presentation/screens/add_booking_screen.dart';
 import '../../features/bookings/presentation/screens/bookings_screen.dart';
@@ -161,6 +162,10 @@ final _routes = <RouteBase>[
     path: AppRoutes.invoice,
     // extra: the booking id (int), or nothing.
     builder: (_, state) => InvoiceScreen(bookingId: state.extra as int?),
+  ),
+  GoRoute(
+    path: AppRoutes.notifications,
+    builder: (_, _) => const NotificationsScreen(),
   ),
   GoRoute(
     path: AppRoutes.assistant,

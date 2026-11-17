@@ -1,4 +1,4 @@
-package com.example.hotel_managemnt_app
+package com.funduqiplus.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

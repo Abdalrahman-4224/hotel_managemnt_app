@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "830754969789",
+    "project_id": "funduqi-plus",
+    "storage_bucket": "funduqi-plus.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:830754969789:android:4c3a0a2999f09364877fd4",
+        "android_client_info": {
+          "package_name": "com.funduqiplus.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC8I_Dr_0vjIV0iRWpI_JWb_W9x9kB5lkc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
