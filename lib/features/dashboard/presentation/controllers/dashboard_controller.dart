@@ -7,6 +7,6 @@ import '../../domain/entities/dashboard_summary.dart';
 /// Today's numbers for the home screen. Invalidate it to reload
 /// (bookings do this after check-in / check-out).
 final dashboardProvider = FutureProvider<DashboardSummary>((ref) {
-  ref.watch(authControllerProvider.select((s) => s.user?.id));
+  ref.watch(signedInUserIdProvider);
   return ref.read(dashboardRepositoryProvider).getSummary();
 });

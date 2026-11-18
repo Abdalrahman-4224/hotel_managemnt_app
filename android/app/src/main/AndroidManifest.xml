@@ -3,10 +3,19 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <!-- Android 13+: the app asks for this once, the first time it signs in. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- allowBackup / dataExtractionRules: the app holds guest names, phone
+         numbers and money, so its files stay out of Auto Backup, adb backup
+         and device-to-device transfer. The sign-in token's key lives in the
+         KeyStore and is never backed up anyway.
+         usesCleartextTraffic: explicit, because the default only became false
+         at API 28 and this app still runs on 24. -->
     <application
         android:label="hotel_managemnt_app"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

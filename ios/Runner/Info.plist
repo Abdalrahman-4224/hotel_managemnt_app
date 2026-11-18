@@ -28,11 +28,9 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>للدخول إلى حسابك بالبصمة أو بالوجه بدل كلمة المرور.</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
+	<!-- App Transport Security is left at its defaults, so only https is
+	     allowed. Nothing here relaxes it; testing against a local server
+	     is done on Android or through an https tunnel. -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

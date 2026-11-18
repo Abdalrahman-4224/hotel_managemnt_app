@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../data/repositories/room_repository_impl.dart';
 import '../../domain/entities/floors.dart';
 import '../../domain/entities/room.dart';
@@ -12,6 +13,11 @@ class FloorsController extends AsyncNotifier<List<Floor>> {
   /// Runs the first time the screen watches this provider.
   @override
   Future<List<Floor>> build() {
+    // Nobody is signed in: there is nothing to load, and the request would
+    // only come back as a 401.
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return Future.value(const <Floor>[]);
+    }
     return ref.read(roomsRepositoryProvider).getFloors();
   }
 

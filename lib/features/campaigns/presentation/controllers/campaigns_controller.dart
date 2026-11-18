@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../../bookings/presentation/controllers/bookings_controller.dart';
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../rooms/presentation/controllers/floors_controller.dart';
@@ -10,6 +11,11 @@ import '../../domain/entities/campaign.dart';
 class CampaignsController extends AsyncNotifier<List<Campaign>> {
   @override
   Future<List<Campaign>> build() {
+    // Nobody is signed in: there is nothing to load, and the request would
+    // only come back as a 401.
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return Future.value(const <Campaign>[]);
+    }
     return ref.read(campaignsRepositoryProvider).getCampaigns();
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../data/repositories/tasks_repository_impl.dart';
 import '../../domain/entities/task_item.dart';
 
@@ -8,6 +9,11 @@ import '../../domain/entities/task_item.dart';
 class TasksController extends AsyncNotifier<List<TaskItem>> {
   @override
   Future<List<TaskItem>> build() {
+    // Nobody is signed in: there is nothing to load, and the request would
+    // only come back as a 401.
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return Future.value(const <TaskItem>[]);
+    }
     return ref.read(tasksRepositoryProvider).getTasks();
   }
 

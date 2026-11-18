@@ -128,3 +128,12 @@ class AuthController extends Notifier<AuthState> {
 final authControllerProvider = NotifierProvider<AuthController, AuthState>(
   AuthController.new,
 );
+
+/// The signed-in user's id, or null when nobody is.
+///
+/// Every provider holding this user's data watches it, so signing out (or a
+/// superadmin switching hotel) drops what the last one loaded instead of
+/// showing it to the next.
+final signedInUserIdProvider = Provider<int?>(
+  (ref) => ref.watch(authControllerProvider.select((state) => state.user?.id)),
+);

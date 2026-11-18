@@ -25,9 +25,7 @@ final notificationsEpochProvider = NotifierProvider<NotificationsEpoch, int>(
 class UnreadCount extends AsyncNotifier<int> {
   @override
   Future<int> build() async {
-    final userId = ref.watch(
-      authControllerProvider.select((state) => state.user?.id),
-    );
+    final userId = ref.watch(signedInUserIdProvider);
     ref.watch(notificationsEpochProvider);
     // Signed out: nothing to count, and the request would only be a 401.
     if (userId == null) return 0;
@@ -52,6 +50,7 @@ class NotificationsController extends AsyncNotifier<List<AppNotification>> {
 
   @override
   Future<List<AppNotification>> build() async {
+    if (ref.watch(signedInUserIdProvider) == null) return const [];
     final page = await ref
         .read(notificationsRepositoryProvider)
         .list(limit: _pageSize);

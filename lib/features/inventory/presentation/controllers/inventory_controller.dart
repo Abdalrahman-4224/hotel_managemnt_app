@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../data/repositories/inventory_repository_impl.dart';
 import '../../domain/entities/inventory_item.dart';
 
@@ -7,6 +8,11 @@ import '../../domain/entities/inventory_item.dart';
 class InventoryController extends AsyncNotifier<List<InventoryItem>> {
   @override
   Future<List<InventoryItem>> build() {
+    // Nobody is signed in: there is nothing to load, and the request would
+    // only come back as a 401.
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return Future.value(const <InventoryItem>[]);
+    }
     return ref.read(inventoryRepositoryProvider).getItems();
   }
 

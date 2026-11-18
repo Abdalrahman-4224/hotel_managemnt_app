@@ -79,6 +79,14 @@ class PushService {
       // Firebase rejects anyway.
       debugPrint('[push] unregister failed: ${error.message}');
     }
+    try {
+      // Throw the token away on the phone too. Without this, a failed call
+      // above would leave the device still subscribed, and the next person
+      // to sign in here would inherit the old registration.
+      await FirebaseMessaging.instance.unregister();
+    } catch (error) {
+      debugPrint('[push] could not drop the token: $error');
+    }
   }
 
   Future<void> _register(String token) async {

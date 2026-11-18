@@ -22,9 +22,7 @@ final permissionsEpochProvider = NotifierProvider<PermissionsEpoch, int>(
 /// Reloads after a new login, and whenever the epoch is bumped.
 final permissionsProvider = FutureProvider<Permissions>((ref) {
   // Watching the user id means a new login loads the new user's permissions.
-  final userId = ref.watch(
-    authControllerProvider.select((state) => state.user?.id),
-  );
+  final userId = ref.watch(signedInUserIdProvider);
   ref.watch(permissionsEpochProvider);
   // Signed out (e.g. on the login screen): there is nothing to ask for, and
   // the request would only come back as a 401.

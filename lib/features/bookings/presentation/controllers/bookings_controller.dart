@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../authentication/presentation/controllers/auth_controller.dart';
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../rooms/presentation/controllers/floors_controller.dart';
 import '../../data/repositories/bookings_repository_impl.dart';
@@ -11,6 +12,11 @@ import '../../domain/entities/booking.dart';
 class BookingsController extends AsyncNotifier<List<Booking>> {
   @override
   Future<List<Booking>> build() {
+    // Nobody is signed in: there is nothing to load, and the request would
+    // only come back as a 401.
+    if (ref.watch(signedInUserIdProvider) == null) {
+      return Future.value(const <Booking>[]);
+    }
     return ref.read(bookingsRepositoryProvider).getBookings();
   }
 
