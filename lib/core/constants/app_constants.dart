@@ -1,7 +1,7 @@
 class AppConstants {
   const AppConstants._();
 
-  static const appName = 'Hotel Management';
+  static const appName = 'فندقي بلس';
 
   /// The shared team server. The backend and the database both live there, so
   /// nothing needs to run on your machine to use the app.

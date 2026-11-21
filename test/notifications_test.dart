@@ -198,10 +198,15 @@ void main() {
   });
 
   group('where a notification opens', () {
-    test('the three known screens', () {
+    test('the known screens', () {
       expect(routeForGo('/tasks'), AppRoutes.tasks);
       expect(routeForGo('/bookings'), AppRoutes.bookings);
       expect(routeForGo('/bookings/new'), AppRoutes.addBooking);
+    });
+
+    test('an electricity alert opens the room map, as on the website', () {
+      expect(routeForGo('/power'), AppRoutes.rooms);
+      expect(routeForGo('/rooms'), AppRoutes.rooms);
     });
 
     test('anything else stays where it is', () {

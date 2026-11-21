@@ -25,7 +25,7 @@ class TaskStatusTag extends StatelessWidget {
     tone: switch (status) {
       TaskStatus.fresh => NzTagTone.gold,
       TaskStatus.inProgress => NzTagTone.dark,
-      TaskStatus.done => NzTagTone.neutral,
+      TaskStatus.done || TaskStatus.cancelled => NzTagTone.neutral,
     },
   );
 }
@@ -51,7 +51,9 @@ class TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = task;
-    final done = t.status == TaskStatus.done;
+    // A cancelled task is as inert as a finished one: dimmed, and never
+    // outlined as urgent.
+    final done = t.status.isClosed;
     final meta = AppText.body(12.5, color: AppColors.inkMuted);
     return Opacity(
       opacity: done ? .78 : 1,

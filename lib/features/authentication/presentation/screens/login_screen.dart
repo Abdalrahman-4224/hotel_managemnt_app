@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/routes/app_routes.dart';
+import '../../../../core/utils/external_links.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/biometric_kind.dart';
 import '../controllers/auth_controller.dart';
@@ -274,7 +275,60 @@ class _SupportLine extends StatelessWidget {
           textAlign: TextAlign.center,
           style: AppText.body(13, color: AppColors.inkFaint, height: 1.7),
         ),
+        SizedBox(height: AppSpacing.s10),
+        const _PolicyLine(),
       ],
+    );
+  }
+}
+
+/// Both stores want the privacy policy reachable before anyone signs in, so
+/// it sits under the login form as well as inside the profile.
+class _PolicyLine extends StatelessWidget {
+  const _PolicyLine();
+
+  @override
+  Widget build(BuildContext context) {
+    // Wrap, not Row: at a large system font size the two links no longer
+    // fit on one line, and a Row would clip them instead of folding.
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        _PolicyLink('سياسة الخصوصية', AppLinks.privacy),
+        Text(' · ', style: AppText.body(12.5, color: AppColors.inkFaint)),
+        _PolicyLink('شروط الاستخدام', AppLinks.terms),
+      ],
+    );
+  }
+}
+
+class _PolicyLink extends StatelessWidget {
+  const _PolicyLink(this.label, this.url);
+
+  final String label;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => openExternal(context, url),
+      // A comfortable tap target without making the line any taller.
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.s4,
+          vertical: AppSpacing.s6,
+        ),
+        child: Text(
+          label,
+          style: AppText.body(
+            12.5,
+            weight: FontWeight.w500,
+            color: AppColors.inkMuted,
+            decoration: TextDecoration.underline,
+          ),
+        ),
+      ),
     );
   }
 }

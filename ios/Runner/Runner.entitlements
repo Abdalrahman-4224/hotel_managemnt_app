@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The Push Notifications capability. Without this entitlement iOS never
+	     hands the app an APNs token, so no notification of any kind arrives -
+	     including the electricity alerts.
+	     "development" is what the capability sets; Xcode signs archives for
+	     TestFlight and the App Store with the production APNs environment. -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

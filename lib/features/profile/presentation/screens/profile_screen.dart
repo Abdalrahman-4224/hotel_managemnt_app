@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/utils/external_links.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../../authentication/domain/entities/auth_user.dart';
 import '../../../authentication/domain/entities/biometric_kind.dart';
@@ -172,6 +173,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ],
                 ),
                 SizedBox(height: AppSpacing.s18),
+                // Apple and Google both require these to be reachable from
+                // inside the app, not only from the website.
+                const NzGroupLabel('الدعم والسياسات'),
+                SizedBox(height: AppSpacing.s8),
+                NzListCard(
+                  children: [
+                    SettingsRow(
+                      icon: LucideIcons.lifeBuoy,
+                      title: 'الدعم والمساعدة',
+                      subtitle: 'support@funduqiplus.com',
+                      onTap: () => openExternal(context, AppLinks.support),
+                    ),
+                    SettingsRow(
+                      icon: LucideIcons.shieldCheck,
+                      title: 'سياسة الخصوصية',
+                      onTap: () => openExternal(context, AppLinks.privacy),
+                    ),
+                    SettingsRow(
+                      icon: LucideIcons.fileText,
+                      title: 'شروط الاستخدام',
+                      onTap: () => openExternal(context, AppLinks.terms),
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppSpacing.s18),
                 NzOutlineButton(
                   label: 'تسجيل الخروج',
                   foreground: AppColors.danger,
@@ -180,6 +206,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   // The router sends the user to login after sign out.
                   onPressed: () =>
                       ref.read(authControllerProvider.notifier).signOut(),
+                ),
+                SizedBox(height: AppSpacing.s10),
+                // The deletion itself happens on the website: a hotel account
+                // belongs to the hotel, so the request goes through support.
+                NzOutlineButton(
+                  label: 'حذف الحساب',
+                  icon: LucideIcons.trash2,
+                  foreground: AppColors.danger,
+                  borderColor: AppColors.dangerBorder,
+                  weight: FontWeight.w600,
+                  onPressed: () =>
+                      openExternal(context, AppLinks.deleteAccount),
+                ),
+                SizedBox(height: AppSpacing.s8),
+                Text(
+                  'يفتح صفحة حذف الحساب على funduqiplus.com.',
+                  textAlign: TextAlign.center,
+                  style: AppText.body(12.5, color: AppColors.inkFaint),
                 ),
               ],
             ),

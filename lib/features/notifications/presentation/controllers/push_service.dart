@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/routes/app_router.dart';
 import '../../data/data_sources/push_data_source.dart';
+import '../../data/repositories/notifications_repository_impl.dart';
 import '../screens/notifications_screen.dart';
 import 'notifications_controller.dart';
 
@@ -105,7 +106,7 @@ class PushService {
         iOS: DarwinInitializationSettings(),
       ),
       onDidReceiveNotificationResponse: (response) =>
-          _open(response.payload ?? ''),
+          _openPayload(response.payload ?? ''),
     );
     await _local
         .resolvePlatformSpecificImplementation<
@@ -117,13 +118,11 @@ class PushService {
     FirebaseMessaging.onMessage.listen(_showWhileOpen);
 
     // Tapped while the app sat in the background.
-    FirebaseMessaging.onMessageOpenedApp.listen(
-      (m) => _open(m.data['go'] ?? ''),
-    );
+    FirebaseMessaging.onMessageOpenedApp.listen((m) => _openMessage(m.data));
 
     // Tapped while the app was closed: this is why it started.
     final first = await FirebaseMessaging.instance.getInitialMessage();
-    if (first != null) _open(first.data['go'] ?? '');
+    if (first != null) _openMessage(first.data);
 
     // Firebase replaces the token now and then. Same reason as above for the
     // deprecated stream: onRegistered carries a different identifier.
@@ -159,15 +158,56 @@ class PushService {
         ),
         iOS: const DarwinNotificationDetails(),
       ),
-      payload: data['go'] ?? '',
+      // The id travels with the tap, so it can be marked read: a local
+      // notification hands back only this string.
+      payload: '${data['id'] ?? ''}|${data['go'] ?? ''}',
     );
   }
 
-  /// A tap: show what it is about, and let the bell catch up.
-  void _open(String go) {
-    _bumpInbox();
-    final route = routeForGo(go);
+  /// A tap on a notification the app drew itself: `id|go`.
+  void _openPayload(String payload) {
+    final cut = payload.indexOf('|');
+    if (cut < 0) return _open(go: payload);
+    return _open(
+      id: payload.substring(0, cut),
+      go: payload.substring(cut + 1),
+    );
+  }
+
+  /// A tap on a notification the system drew, from the message's own data.
+  void _openMessage(Map<String, dynamic> data) =>
+      _open(id: data['id']?.toString(), go: data['go']?.toString());
+
+  /// A tap: mark it read, then show what it is about. Navigation does not
+  /// wait for the server - the screen opens now, the badge catches up.
+  void _open({String? id, String? go}) {
+    if (id == null || id.isEmpty) {
+      _bumpInbox();
+    } else {
+      _markRead(id);
+    }
+    final route = routeForGo(go ?? '');
     if (route != null) ref.read(appRouterProvider).go(route);
+  }
+
+  /// Opening a notification is reading it, so the count has to come down.
+  /// Reading it inside the inbox screen already did this; a tap on the push
+  /// itself did not, which left the bell counting notifications the user had
+  /// just read.
+  Future<void> _markRead(String id) async {
+    try {
+      final left = await ref
+          .read(notificationsRepositoryProvider)
+          .markRead(ids: [id]);
+      // The server's own number, so the bell never drifts.
+      ref.read(unreadCountProvider.notifier).set(left);
+      // Any open inbox still shows the row unread.
+      ref.invalidate(notificationsControllerProvider);
+    } catch (error) {
+      debugPrint('[push] could not mark $id read: $error');
+      // Offline: at least re-read the badge and the list.
+      _bumpInbox();
+    }
   }
 
   /// The badge and any open inbox are now out of date.

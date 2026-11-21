@@ -80,6 +80,13 @@ class Permissions {
   /// Roles and their permissions.
   static const roleManage = 'ROLE_MANAGE';
 
+  /// Room electricity: the marks on the room map, and the alert settings.
+  /// The hotel owner has it; reception never does, because reception is what
+  /// the electricity watch is there to catch. Without this code the app shows
+  /// no mark, no legend and no wording about electricity, and asks the server
+  /// for nothing under /power.
+  static const powerView = 'POWER_VIEW';
+
   /// The hotel assistant (the AI chat). The platform operator switches this
   /// on per role; no role has it by default, not even the hotel manager.
   static const assistantUse = 'ASSISTANT_USE';

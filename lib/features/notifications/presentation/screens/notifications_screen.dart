@@ -143,5 +143,8 @@ String? routeForGo(String go) => switch (go) {
   '/tasks' => AppRoutes.tasks,
   '/bookings' => AppRoutes.bookings,
   '/bookings/new' => AppRoutes.addBooking,
+  // Electricity lives on the room map, exactly as it does on the website:
+  // there is no separate power screen to send these to.
+  '/power' || '/rooms' => AppRoutes.rooms,
   _ => null,
 };

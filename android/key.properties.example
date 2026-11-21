@@ -1,0 +1,13 @@
+# Copy to android/key.properties and fill in. That copy is gitignored and must
+# never be committed or shared; keep the keystore file and these passwords with
+# the owner as well, because losing them makes updating the app impossible.
+#
+# Create the keystore once (upload key, RSA 2048, 10000 days):
+#   keytool -genkey -v -keystore ~/funduqi-plus-upload.jks \
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+#
+# storeFile is resolved from android/app, so an absolute path is safest.
+storePassword=
+keyPassword=
+keyAlias=upload
+storeFile=/Users/you/funduqi-plus-upload.jks

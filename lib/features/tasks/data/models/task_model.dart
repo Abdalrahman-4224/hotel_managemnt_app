@@ -19,9 +19,13 @@ class TaskModel {
   };
 
   /// The server also has 'Approved'; the app shows it as in progress.
+  /// 'Cancelled' has to be its own state: folded into `fresh` it showed a
+  /// dead task as a new one, with "استلام" and "إنجاز" buttons on it.
   static TaskStatus statusFromJson(String? value) => switch (value) {
     'Completed' => TaskStatus.done,
     'InProgress' || 'Approved' => TaskStatus.inProgress,
+    // Both spellings, because the two are easy to confuse server-side.
+    'Cancelled' || 'Canceled' => TaskStatus.cancelled,
     _ => TaskStatus.fresh,
   };
 

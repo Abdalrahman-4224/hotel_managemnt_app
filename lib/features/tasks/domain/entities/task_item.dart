@@ -9,14 +9,19 @@ extension TaskTypeLabel on TaskType {
   };
 }
 
-enum TaskStatus { fresh, inProgress, done }
+enum TaskStatus { fresh, inProgress, done, cancelled }
 
 extension TaskStatusLabel on TaskStatus {
   String get label => switch (this) {
     TaskStatus.fresh => 'جديدة',
     TaskStatus.inProgress => 'قيد التنفيذ',
     TaskStatus.done => 'منجزة',
+    TaskStatus.cancelled => 'ملغاة',
   };
+
+  /// Nothing left to do: it is neither waiting for anyone nor in progress.
+  bool get isClosed =>
+      this == TaskStatus.done || this == TaskStatus.cancelled;
 }
 
 /// Someone a task can be sent to.

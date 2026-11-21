@@ -85,8 +85,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final shown = box
         .where((t) => _filter == null || t.status == _filter)
         .toList();
-    int open(_Box b) =>
-        _inBox(b).where((t) => t.status != TaskStatus.done).length;
+    int open(_Box b) => _inBox(b).where((t) => !t.status.isClosed).length;
 
     return Scaffold(
       body: Stack(
@@ -209,7 +208,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     final other = inbox ? t.fromName : t.toName;
     final canAct =
         inbox &&
-        t.status != TaskStatus.done &&
+        !t.status.isClosed &&
         ref.read(canProvider).can(Permissions.taskUpdate);
     return TaskCard(
       task: t,
