@@ -200,16 +200,33 @@ class _NotchPainter extends CustomPainter {
     // The shape is in design units, scaled like the rest of the bar;
     // c (the active tab's centre) is already in pixels.
     final w = size.width, h = size.height;
-    final path = Path()
-      ..moveTo(0, 44.r)
-      ..quadraticBezierTo(0, 26.r, 18.r, 26.r)
+    // On the first and last tab the notch reaches into the bar's rounded
+    // corner. Drawing both then folds the outline back on itself and leaves
+    // a black spike above the bar, so the corner gives way to the notch.
+    final roundLeft = c - 50.r > 18.r;
+    final roundRight = c + 50.r < w - 18.r;
+    final path = Path();
+    if (roundLeft) {
+      path
+        ..moveTo(0, 44.r)
+        ..quadraticBezierTo(0, 26.r, 18.r, 26.r);
+    } else {
+      path.moveTo(math.min(0, c - 50.r), 26.r);
+    }
+    path
       ..lineTo(c - 50.r, 26.r)
       ..cubicTo(c - 30.r, 26.r, c - 34.r, 66.r, c, 66.r)
-      ..cubicTo(c + 34.r, 66.r, c + 30.r, 26.r, c + 50.r, 26.r)
-      ..lineTo(w - 18.r, 26.r)
-      ..quadraticBezierTo(w, 26.r, w, 44.r)
-      ..lineTo(w, h)
-      ..lineTo(0, h)
+      ..cubicTo(c + 34.r, 66.r, c + 30.r, 26.r, c + 50.r, 26.r);
+    if (roundRight) {
+      path
+        ..lineTo(w - 18.r, 26.r)
+        ..quadraticBezierTo(w, 26.r, w, 44.r);
+    } else {
+      path.lineTo(math.max(w, c + 50.r), 26.r);
+    }
+    path
+      ..lineTo(math.max(w, c + 50.r), h)
+      ..lineTo(math.min(0, c - 50.r), h)
       ..close();
     canvas.drawPath(path, Paint()..color = AppColors.ink);
   }
