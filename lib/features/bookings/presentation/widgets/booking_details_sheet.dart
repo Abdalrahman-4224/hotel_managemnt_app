@@ -11,6 +11,8 @@ import '../../../../core/routes/app_routes.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/entities/booking_quote.dart';
+import '../../domain/repositories/bookings_repository.dart'
+    show BookingPartlySaved;
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../rooms/presentation/controllers/floors_controller.dart';
 import '../controllers/add_booking_controller.dart';
@@ -120,6 +122,9 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                         child: _DateField(
                           label: 'تاريخ الدخول',
                           value: c.checkIn,
+                          // Yesterday too, for a guest who arrived after midnight.
+                          firstDate: DateUtils.dateOnly(DateTime.now())
+                              .subtract(const Duration(days: 1)),
                           onPicked: (d) => c.setDates(checkIn: d),
                         ),
                       ),
@@ -128,6 +133,7 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                         child: _DateField(
                           label: 'تاريخ الخروج',
                           value: c.checkOut,
+                          firstDate: c.checkIn.add(const Duration(days: 1)),
                           onPicked: (d) => c.setDates(checkOut: d),
                         ),
                       ),
@@ -142,25 +148,29 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
                     c.mealIncluded,
                     (v) => c.set(() => c.mealIncluded = v),
                   ),
-                  SizedBox(height: AppSpacing.s16),
-                  _seg<int>(
-                    'طريقة الدفع',
-                    const [NzSegment(0, 'نقداً'), NzSegment(1, 'بطاقة')],
-                    c.payByCard,
-                    (v) => c.set(() => c.payByCard = v),
-                  ),
-                  SizedBox(height: AppSpacing.s16),
-                  _seg<PaymentTiming>(
-                    'توقيت الدفع',
-                    const [
-                      NzSegment(PaymentTiming.fullNow, 'كامل الآن'),
-                      NzSegment(PaymentTiming.depositNow, 'دفعة الآن'),
-                      NzSegment(PaymentTiming.onCheckout, 'عند المغادرة'),
-                    ],
-                    c.timing,
-                    (v) => c.set(() => c.timing = v),
-                    fontSize: 13,
-                  ),
+                  // Taking money needs FINANCE_CREATE; without it the whole
+                  // amount is due on checkout and there is nothing to choose.
+                  if (c.canRecordPayment) ...[
+                    SizedBox(height: AppSpacing.s16),
+                    _seg<int>(
+                      'طريقة الدفع',
+                      const [NzSegment(0, 'نقداً'), NzSegment(1, 'بطاقة')],
+                      c.payByCard,
+                      (v) => c.set(() => c.payByCard = v),
+                    ),
+                    SizedBox(height: AppSpacing.s16),
+                    _seg<PaymentTiming>(
+                      'توقيت الدفع',
+                      const [
+                        NzSegment(PaymentTiming.fullNow, 'كامل الآن'),
+                        NzSegment(PaymentTiming.depositNow, 'دفعة الآن'),
+                        NzSegment(PaymentTiming.onCheckout, 'عند المغادرة'),
+                      ],
+                      c.timing,
+                      (v) => c.set(() => c.timing = v),
+                      fontSize: 13,
+                    ),
+                  ],
                   SizedBox(height: AppSpacing.s16),
                   _seg<PriceBasis>(
                     'أساس حساب السعر',
@@ -202,8 +212,13 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
     }
     final router = GoRouter.of(context);
     final navigator = Navigator.of(context);
+    String? partly;
     try {
       await c.confirm();
+    } on BookingPartlySaved catch (error) {
+      // Some of it is saved: close the form so it can't be sent twice, and
+      // open the bookings list where the rest can be finished.
+      partly = error.message;
     } catch (error) {
       if (mounted) showNzToast(context, errorText(error));
       return;
@@ -212,9 +227,9 @@ class _BookingDetailsState extends ConsumerState<_BookingDetails> {
     ref.invalidate(bookingsControllerProvider);
     ref.invalidate(floorsControllerProvider);
     ref.invalidate(dashboardProvider);
-    if (mounted) showNzToast(context, 'تم تأكيد الحجز');
+    if (mounted) showNzToast(context, partly ?? 'تم تأكيد الحجز');
     navigator.pop(true);
-    router.go(AppRoutes.home);
+    router.go(partly == null ? AppRoutes.home : AppRoutes.bookings);
   }
 
   Widget _header() {
@@ -689,6 +704,7 @@ class _DateField extends StatelessWidget {
   const _DateField({
     required this.label,
     required this.value,
+    required this.firstDate,
     required this.onPicked,
   });
 
@@ -696,6 +712,10 @@ class _DateField extends StatelessWidget {
 
   final String label;
   final DateTime value;
+
+  /// The earliest day the picker offers. The latest is two years on from
+  /// whichever is later, today or [value], so the range never runs out.
+  final DateTime firstDate;
   final ValueChanged<DateTime> onPicked;
 
   @override
@@ -707,11 +727,16 @@ class _DateField extends StatelessWidget {
         SizedBox(height: 7.r),
         GestureDetector(
           onTap: () async {
+            final today = DateUtils.dateOnly(DateTime.now());
+            final from = value.isBefore(firstDate) ? value : firstDate;
+            final last = (value.isAfter(today) ? value : today).add(
+              const Duration(days: 731),
+            );
             final d = await showDatePicker(
               context: context,
               initialDate: value,
-              firstDate: DateTime(2024),
-              lastDate: DateTime(2030),
+              firstDate: from,
+              lastDate: last,
             );
             if (d != null) onPicked(d);
           },

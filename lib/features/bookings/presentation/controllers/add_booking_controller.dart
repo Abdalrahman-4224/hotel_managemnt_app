@@ -6,7 +6,8 @@ import '../../../rooms/domain/entities/floors.dart';
 import '../../../rooms/domain/entities/room.dart';
 import '../../domain/entities/booking_quote.dart';
 import '../../domain/entities/new_booking.dart';
-import '../../domain/repositories/bookings_repository.dart';
+import '../../domain/repositories/bookings_repository.dart'
+    show BookingPartlySaved, BookingsRepository;
 
 class DiscountOption {
   const DiscountOption(this.label, this.type, this.defaultValue);
@@ -18,10 +19,20 @@ class DiscountOption {
 
 /// State of the add-booking flow (room picking + booking details).
 class AddBookingController extends ChangeNotifier {
-  AddBookingController({required this.floors, required this.repository});
+  AddBookingController({
+    required this.floors,
+    required this.repository,
+    this.canRecordPayment = true,
+  }) : timing = canRecordPayment
+           ? PaymentTiming.depositNow
+           : PaymentTiming.onCheckout;
 
   final List<Floor> floors;
   final BookingsRepository repository;
+
+  /// FINANCE_CREATE. Without it the server refuses the payment that follows
+  /// the booking, so the form takes no money: all of it is due on checkout.
+  final bool canRecordPayment;
 
   // Guest (or, for a group, the person in charge) details.
   final groupName = TextEditingController();
@@ -45,7 +56,7 @@ class AddBookingController extends ChangeNotifier {
 
   var mealIncluded = 0; // 0: مع إفطار, 1: بدون
   var payByCard = 0; // 0: نقداً, 1: بطاقة
-  var timing = PaymentTiming.depositNow;
+  PaymentTiming timing;
   var basis = PriceBasis.perRoom;
   var rateRoom = 240;
   var ratePerson = 20;
@@ -132,7 +143,13 @@ class AddBookingController extends ChangeNotifier {
   }
 
   void setDates({DateTime? checkIn, DateTime? checkOut}) {
-    if (checkIn != null) this.checkIn = checkIn;
+    if (checkIn != null) {
+      this.checkIn = checkIn;
+      // Keep at least one night: moving check-in past check-out drags it on.
+      if (!this.checkOut.isAfter(checkIn)) {
+        this.checkOut = checkIn.add(const Duration(days: 1));
+      }
+    }
     if (checkOut != null) this.checkOut = checkOut;
     notifyListeners();
   }
@@ -208,6 +225,10 @@ class AddBookingController extends ChangeNotifier {
       );
       // confirmBooking ends the holds itself.
       _lockIds = [];
+    } on BookingPartlySaved {
+      // Part of it is on the server, so the rooms are no longer ours to free.
+      _lockIds = [];
+      rethrow;
     } finally {
       set(() => isSaving = false);
     }

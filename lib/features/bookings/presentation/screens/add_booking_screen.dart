@@ -6,6 +6,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../../authentication/domain/entities/permissions.dart';
+import '../../../authentication/presentation/controllers/permissions_controller.dart';
 import '../../../rooms/domain/entities/room.dart';
 import '../../../rooms/presentation/controllers/floors_controller.dart';
 import '../../data/repositories/bookings_repository_impl.dart';
@@ -88,6 +90,7 @@ class _AddBookingScreenState extends ConsumerState<AddBookingScreen> {
     final c = _controller ??= AddBookingController(
       floors: async.value!,
       repository: ref.read(bookingsRepositoryProvider),
+      canRecordPayment: ref.read(canProvider).can(Permissions.financeCreate),
     );
     final bottom = MediaQuery.paddingOf(context).bottom;
     return ListenableBuilder(

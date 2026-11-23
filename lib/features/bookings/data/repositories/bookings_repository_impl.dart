@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/utils/json_parsers.dart';
 import '../../domain/entities/booking.dart';
@@ -80,39 +81,59 @@ class BookingsRepositoryImpl implements BookingsRepository {
     final nights = booking.checkOut.difference(booking.checkIn).inDays;
     final roomTotal = booking.total / booking.rooms.length;
     int? firstBookingId;
+    var saved = 0;
 
-    for (final room in booking.rooms) {
-      final created = await dataSource.confirmBooking({
-        'room_id': room.id,
-        'check_in_date': apiDate(booking.checkIn),
-        'check_out_date': apiDate(booking.checkOut),
-        'price_per_night': (roomTotal / nights).toStringAsFixed(2),
-        'total_amount': roomTotal.toStringAsFixed(2),
-        'meal_plan': booking.withBreakfast
-            ? 'WithBreakfast'
-            : 'WithoutBreakfast',
-        'booking_type': booking.isGroup ? 'Campaign' : 'Individual',
-        'campaign_id': campaignId,
-        'guest_details': {
-          'full_name': booking.guestName,
-          'phone': booking.phone,
-          'national_id_or_passport': booking.nationalId,
-        },
-      });
-      firstBookingId ??= parseInt(created['booking_id']);
+    // Each room, and then the payment, is its own request. Once one booking
+    // exists, a later failure must not look like "nothing happened": the
+    // user would press confirm again and book the same guest twice.
+    try {
+      for (final room in booking.rooms) {
+        final created = await dataSource.confirmBooking({
+          'room_id': room.id,
+          'check_in_date': apiDate(booking.checkIn),
+          'check_out_date': apiDate(booking.checkOut),
+          'price_per_night': (roomTotal / nights).toStringAsFixed(2),
+          'total_amount': roomTotal.toStringAsFixed(2),
+          'meal_plan': booking.withBreakfast
+              ? 'WithBreakfast'
+              : 'WithoutBreakfast',
+          'booking_type': booking.isGroup ? 'Campaign' : 'Individual',
+          'campaign_id': campaignId,
+          'guest_details': {
+            'full_name': booking.guestName,
+            'phone': booking.phone,
+            'national_id_or_passport': booking.nationalId,
+          },
+        });
+        firstBookingId ??= parseInt(created['booking_id']);
+        saved++;
+      }
+    } on AppException catch (error) {
+      if (saved == 0) rethrow;
+      throw BookingPartlySaved(
+        'حُفظ $saved من ${booking.rooms.length} غرف فقط (${error.message}). '
+        'لا تعِد الحجز: أكمل الباقي من قائمة الحجوزات.',
+      );
     }
 
     // Money taken at the desk is recorded as revenue on the (first) booking.
     if (booking.receivedNow > 0) {
-      await dataSource.addPayment({
-        'booking_id': firstBookingId,
-        'transaction_type': 'Revenue',
-        'category': 'Booking',
-        'amount': booking.receivedNow,
-        'currency': 'USD',
-        'payment_method': booking.payByCard ? 'CreditCard' : 'Cash',
-        'description': 'دفعة حجز #$firstBookingId',
-      });
+      try {
+        await dataSource.addPayment({
+          'booking_id': firstBookingId,
+          'transaction_type': 'Revenue',
+          'category': 'Booking',
+          'amount': booking.receivedNow,
+          'currency': 'USD',
+          'payment_method': booking.payByCard ? 'CreditCard' : 'Cash',
+          'description': 'دفعة حجز #$firstBookingId',
+        });
+      } on AppException catch (error) {
+        throw BookingPartlySaved(
+          'تم الحجز، لكن لم يُسجَّل المبلغ المستلم (${error.message}). '
+          'سجّله من شاشة المالية، ولا تعِد الحجز.',
+        );
+      }
     }
   }
 

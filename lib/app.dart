@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'core/constants/app_constants.dart';
 import 'core/routes/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/authentication/presentation/controllers/permissions_controller.dart';
@@ -50,7 +51,9 @@ class _AppState extends ConsumerState<App> {
       // that frame keep their 0 widths for good. Wait for a real size first.
       ensureScreenSize: true,
       builder: (context, child) => MaterialApp.router(
-        title: 'Hotel Management',
+        // Android shows this in the recent-apps list.
+        title: AppConstants.appName,
+
         theme: AppTheme.light,
         routerConfig: ref.watch(appRouterProvider),
         // Arabic UI: sets right-to-left layout and Arabic Material strings.

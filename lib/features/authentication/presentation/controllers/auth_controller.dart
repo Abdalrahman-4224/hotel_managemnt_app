@@ -120,6 +120,11 @@ class AuthController extends Notifier<AuthState> {
 
   /// Called by ApiClient when the server says the token is no longer valid.
   Future<void> sessionExpired() async {
+    // The phone must stop receiving the last user's notifications (guest
+    // names on the lock screen). The server call fails without a session,
+    // but stop() also drops the Firebase token on the phone, and the server
+    // forgets a token Firebase no longer accepts.
+    await ref.read(pushServiceProvider).stop();
     await ref.read(authRepositoryProvider).clearSession();
     state = const AuthState(status: AuthStatus.loggedOut);
   }

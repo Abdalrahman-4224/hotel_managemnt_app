@@ -37,8 +37,9 @@ class TaskModel {
     return TaskItem(
       id: parseInt(json['task_id'])!,
       type: typeFromJson(json['task_type']),
-      // The first line is the title; the rest are details.
-      title: (json['description'] ?? '').toString().split('\n').first,
+      // Tasks sent from the website carry their own title. The app's own
+      // tasks have none: the first line of the description is the title.
+      title: _title(json),
       location: room != null ? 'غرفة $room' : (floor ?? ''),
       fromId: parseInt(json['created_by_user_id']),
       fromName: json['created_by_name'] ?? '—',
@@ -50,6 +51,12 @@ class TaskModel {
           : '${sentAt?.day}/${sentAt?.month} ${fmtTime(sentAt)}',
       urgent: json['is_urgent'] == true,
     );
+  }
+
+  static String _title(Map<String, dynamic> json) {
+    final title = (json['title'] ?? '').toString().trim();
+    if (title.isNotEmpty) return title;
+    return (json['description'] ?? '').toString().split('\n').first;
   }
 
   static Map<String, dynamic> newTaskToJson(NewTask task) {

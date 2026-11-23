@@ -218,7 +218,10 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> {
         BookingStatus.upcoming => can.can(Permissions.bookingCheckIn),
         // Check-out is its own code, so a role can check guests in but not out.
         BookingStatus.staying => can.can(Permissions.bookingCheckOut),
-        BookingStatus.departed => can.can(Permissions.financeInvoice),
+        // The invoice reads the payments from /transactions (FINANCE_VIEW).
+        BookingStatus.departed =>
+          can.can(Permissions.financeInvoice) &&
+              can.can(Permissions.financeView),
         BookingStatus.cancelled => false,
       };
 

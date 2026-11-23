@@ -19,13 +19,9 @@ dependencies:
   flutter_riverpod: ^3.4.3
   flutter_screenutil: ^5.9.3
   flutter_secure_storage: ^11.2.0
-  freezed_annotation: ^3.1.0
   go_router: ^18.0.1
   google_fonts: ^9.0.0
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
   intl: ^0.20.3
-  json_annotation: ^4.12.0
   local_auth: ^3.0.2
   local_auth_android: ^2.3.0
   local_auth_darwin: ^2.0.5
@@ -37,13 +33,14 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  build_runner: ^2.16.1
-  freezed: ^4.0.2
-  json_serializable: ^6.14.1
   flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
+  # The three type families, bundled so the app never downloads them (see
+  # main.dart). File names follow google_fonts: <Family>-<Weight>.ttf.
+  assets:
+    - assets/fonts/
 
 # The launcher icon: the approved Funduqi Plus icon, copied unchanged from the
 # brand package (funduqi-plus-icons.zip). Never redraw or re-rasterise it.
