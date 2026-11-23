@@ -202,14 +202,22 @@ Future<T?> showNzTallSheet<T>(
             ),
         ],
       );
-      return shrinkWrap
-          ? ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.sizeOf(ctx).height * heightFactor,
-              ),
-              child: column,
-            )
-          : FractionallySizedBox(heightFactor: heightFactor, child: column);
+      // The sheet does not move for the keyboard by itself, so it is lifted
+      // above it here and its height taken from what is left: the header and
+      // the save button stay in view and the body scrolls between them. This
+      // matters most on an iPad on its side, where the keyboard takes half
+      // the screen.
+      final insets = MediaQuery.viewInsetsOf(ctx).bottom;
+      final room = MediaQuery.sizeOf(ctx).height - insets;
+      return Padding(
+        padding: EdgeInsets.only(bottom: insets),
+        child: shrinkWrap
+            ? ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: room * heightFactor),
+                child: column,
+              )
+            : FractionallySizedBox(heightFactor: heightFactor, child: column),
+      );
     },
   );
 }
