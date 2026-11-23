@@ -18,8 +18,14 @@ Future<void> main() async {
   GoogleFonts.config.allowRuntimeFetching = false;
   LicenseRegistry.addLicense(_fontLicenses);
 
-  // Every screen is laid out for a phone held upright.
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Every screen is laid out for a phone held upright. On a tablet the app
+  // keeps those proportions in a centred frame (see _DesignFrame in app.dart)
+  // rather than stretching, so upright is the only orientation there too -
+  // and an iPad has no fixed "up".
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
   // Push is an extra: if Firebase can't start (an old phone with no Play
   // services, a bad config), the app still has to run.
