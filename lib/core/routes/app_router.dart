@@ -129,14 +129,6 @@ final _routes = <RouteBase>[
       StatefulShellBranch(
         routes: [
           GoRoute(
-            path: AppRoutes.profile,
-            builder: (_, _) => const ProfileScreen(),
-          ),
-        ],
-      ),
-      StatefulShellBranch(
-        routes: [
-          GoRoute(
             path: AppRoutes.finance,
             builder: (_, _) => const FinanceScreen(),
           ),
@@ -147,6 +139,16 @@ final _routes = <RouteBase>[
           GoRoute(
             path: AppRoutes.staff,
             builder: (_, _) => const StaffScreen(),
+          ),
+        ],
+      ),
+      // The user's own account sits at the far end of the bar, as in most
+      // apps.
+      StatefulShellBranch(
+        routes: [
+          GoRoute(
+            path: AppRoutes.profile,
+            builder: (_, _) => const ProfileScreen(),
           ),
         ],
       ),

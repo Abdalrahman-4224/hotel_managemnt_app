@@ -39,9 +39,9 @@ class NzBottomNav extends StatelessWidget {
   /// Every tab, in the same order as the router's shell branches.
   static const allItems = [
     NzNavItem('الرئيسية', LucideIcons.house),
-    NzNavItem('حسابي', LucideIcons.userRound),
     NzNavItem('المالية', LucideIcons.wallet),
     NzNavItem('الموظفون', LucideIcons.users),
+    NzNavItem('حسابي', LucideIcons.userRound),
   ];
 
   /// Transparent band above the bar where the active circle sits.

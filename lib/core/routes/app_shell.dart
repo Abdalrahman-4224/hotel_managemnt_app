@@ -21,9 +21,9 @@ class AppShell extends ConsumerWidget {
   /// Home and the user's own profile are always available.
   static const _tabPermission = <int, String?>{
     0: null, // الرئيسية
-    1: null, // حسابي
-    2: Permissions.financeView, // المالية
-    3: Permissions.staffView, // الموظفون
+    1: Permissions.financeView, // المالية
+    2: Permissions.staffView, // الموظفون
+    3: null, // حسابي
   };
 
   List<int> _visibleBranches(Permissions can) {
