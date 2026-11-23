@@ -45,31 +45,21 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-# The launcher icon. The source of truth is assets/icon/icon.svg - the same
-# gold hotel mark the website uses as its favicon. Three variants are derived
-# from it by hand because the corners and the padding differ per platform:
-#   _square.svg       the mark on a full, square plate (no rounded corners):
-#                     the source for iOS, which rounds them itself and rejects
-#                     an alpha channel outright.
-#   _adaptive-bg.svg  the plate alone, Android's adaptive background layer.
-#   _adaptive-fg.svg  the mark alone on nothing, Android's foreground layer.
-#                     It is drawn larger than in icon.svg because the generator
-#                     insets this layer by 16%, and the mark has to end up at
-#                     about half the finished icon to match Android's own.
-# Re-rasterise the PNGs from those (any SVG rasteriser) and then run:
-#   dart run flutter_launcher_icons
-# which overwrites every mipmap-*/ic_launcher.png and the whole iOS AppIcon set.
-# assets/icon/play-store-512.png is the Play Console listing icon; it is not
-# used by the app, and Play rounds its corners itself.
+# The launcher icon: the approved Funduqi Plus icon, copied unchanged from the
+# brand package (funduqi-plus-icons.zip). Never redraw or re-rasterise it.
+#   AppIcon-1024.png      ios/AppIcon-1024.png (square, RGB, no alpha)
+#   foreground-1024.png   android/adaptive-layers/foreground-1024.png
+#   monochrome-1024.png   android/adaptive-layers/monochrome-1024.png
+#   play-store-512.png    android/play-store-512.png (Play Console only)
+# The foreground layer is already drawn inside Android's safe zone, so the
+# generator must not inset it again (its default is 16%).
+# After changing anything here run:  dart run flutter_launcher_icons
 flutter_launcher_icons:
   android: true
   ios: true
-  # The flat, full icon. iOS rejects an icon with an alpha channel, and this is
-  # also the fallback on Android phones older than 8.0, which have no adaptive
-  # icons to compose.
-  image_path: "assets/icon/icon-1024.png"
+  image_path: "assets/icon/AppIcon-1024.png"
   remove_alpha_ios: true
-  # Android composes these two layers itself: the plate, and the mark alone on
-  # a transparent canvas. Neither is a complete icon on its own.
-  adaptive_icon_background: "assets/icon/adaptive-layers/background.png"
-  adaptive_icon_foreground: "assets/icon/adaptive-layers/foreground.png"
+  adaptive_icon_background: "#1d1a16"
+  adaptive_icon_foreground: "assets/icon/foreground-1024.png"
+  adaptive_icon_foreground_inset: 0
+  adaptive_icon_monochrome: "assets/icon/monochrome-1024.png"
