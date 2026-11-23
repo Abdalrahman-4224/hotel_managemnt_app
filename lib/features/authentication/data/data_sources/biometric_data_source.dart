@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
+import 'package:local_auth_darwin/local_auth_darwin.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../domain/entities/biometric_kind.dart';
@@ -44,6 +45,15 @@ class BiometricDataSource {
             signInTitle: kind.signInTitle,
             signInHint: kind.promptHint,
             cancelButton: 'إلغاء',
+          ),
+          // Without these the iOS prompt keeps the plugin's English defaults
+          // in an app that is Arabic everywhere else. iOS takes no title or
+          // hint: the sheet shows NSFaceIDUsageDescription and the reason.
+          // The fallback button is empty on purpose - it offers the device
+          // passcode, which biometricOnly above refuses anyway.
+          const IOSAuthMessages(
+            cancelButton: 'إلغاء',
+            localizedFallbackTitle: '',
           ),
         ],
       );

@@ -54,6 +54,7 @@ class PushService {
       await _listen();
       final settings = await FirebaseMessaging.instance.requestPermission();
       if (settings.authorizationStatus == AuthorizationStatus.denied) return;
+      if (!await _apnsReady()) return;
 
       // getToken is deprecated in favour of register()/onRegistered, but those
       // give the Firebase Installation ID, and the server sends with
@@ -66,6 +67,23 @@ class PushService {
       // refuses the token, must not stop the app from working.
       debugPrint('[push] start failed: $error');
     }
+  }
+
+  /// iOS hands out no Firebase token until Apple has answered the
+  /// registration that requestPermission starts, and getToken throws until
+  /// then. Apple usually answers within a second; a simulator never does, and
+  /// neither does a phone that is offline. Giving up here is not a failure:
+  /// start() runs again on every app start while signed in.
+  Future<bool> _apnsReady() async {
+    if (!Platform.isIOS) return true;
+    for (var waited = Duration.zero;
+        waited < const Duration(seconds: 5);
+        waited += const Duration(milliseconds: 400)) {
+      if (await FirebaseMessaging.instance.getAPNSToken() != null) return true;
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+    }
+    debugPrint('[push] no APNs token yet; will try again next start');
+    return false;
   }
 
   /// Before the token is cleared on sign-out, while it still authenticates.
@@ -103,7 +121,15 @@ class PushService {
     await _local.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-        iOS: DarwinInitializationSettings(),
+        // Firebase asks for the permission in start(); these default to
+        // true, which would put a second ask first and leave the status
+        // start() reads the result of a prompt it never showed. This plugin
+        // only has to draw notifications, so it asks for nothing.
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
       ),
       onDidReceiveNotificationResponse: (response) =>
           _openPayload(response.payload ?? ''),
